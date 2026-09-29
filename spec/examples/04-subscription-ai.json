@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "1.0",
+  "id": "com.moxsh.plugin.ai.pro",
+  "name": "AI 助手 Pro",
+  "nameI18n": { "en": "AI Assistant Pro" },
+  "version": "3.1.0",
+  "author": { "name": "MoX Labs", "url": "https://moxsh.app", "moxId": "mox_labs" },
+  "publisher": { "id": "moxlabs", "name": "MoX Labs", "verified": true },
+  "description": "多模型 AI 助手：接 DeepSeek/智谱/通义/Kimi，支持技能与 Agent 工具。订阅解锁高级能力。",
+  "descriptionI18n": { "en": "Multi-model AI assistant: DeepSeek/Zhipu/Qwen/Kimi, with skills and agent tools. Subscribe to unlock Pro." },
+  "longDescription": "## AI 助手 Pro\n\n免费档可用基础对话与 3 个内置技能；订阅 Pro 后解锁：\n\n- 全部技能库与自定义技能\n- Agent 工具（自动执行终端命令、文件操作，带危险分级确认）\n- 更长上下文与更高并发\n- 多设备同步对话历史",
+  "icon": "assets/icon.png",
+  "banner": "assets/banner.png",
+  "screenshots": ["assets/s1.png", "assets/s2.png", "assets/s3.png"],
+  "categories": ["ai", "productivity", "automation"],
+  "tags": ["ai", "llm", "agent", "skill"],
+  "keywords": ["AI", "助手", "大模型", "智能体", "DeepSeek", "智谱"],
+  "homepage": "https://moxsh.app/plugins/ai-pro",
+  "terms": "https://moxsh.app/terms",
+  "privacy": "https://moxsh.app/privacy",
+  "license": { "spdx": "LicenseRef-Proprietary", "name": "MoX Labs EULA" },
+  "visibility": "closed-source",
+  "pricing": {
+    "model": "subscription",
+    "currency": "CNY",
+    "trial": { "enabled": true, "days": 7, "featureLimited": false },
+    "freeTier": {
+      "enabled": true,
+      "features": ["基础对话", "3 个内置技能"],
+      "limits": { "models": 2, "history_days": 7, "concurrent": 1 }
+    },
+    "plans": [
+      { "id": "monthly", "name": "Pro 月付", "price": 12, "billing": "monthly", "features": ["全技能库", "Agent 工具", "长上下文"] },
+      { "id": "yearly", "name": "Pro 年付", "description": "相当于 ¥10/月", "price": 118, "compareAtPrice": 144, "billing": "yearly", "recommended": true, "features": ["全技能库", "Agent 工具", "长上下文", "多设备同步"], "quota": { "devices": 5 } },
+      { "id": "lifetime", "name": "终身版", "price": 399, "billing": "lifetime", "features": ["一次性买断", "含 2 年新功能", "优先接入新模型"], "quota": { "devices": 3 } }
+    ],
+    "provider": {
+      "type": "afdian",
+      "afdian": {
+        "creatorPage": "https://afdian.com/a/moxlabs",
+        "shopItems": [
+          { "planId": "monthly", "itemId": "aa11bb22cc", "skuId": "ai-pro-month" },
+          { "planId": "yearly", "itemId": "dd33ee44ff", "skuId": "ai-pro-year" },
+          { "planId": "lifetime", "itemId": "0011aa22bb", "skuId": "ai-pro-life" }
+        ],
+        "orderQueryTemplate": "https://api.moxsh.app/license/afdian/subscription?order={orderNo}",
+        "verifyEndpoint": "https://api.moxsh.app/license/afdian/subscription",
+        "bindBy": "afdian-uid"
+      }
+    },
+    "license": {
+      "required": true,
+      "type": "account-bind",
+      "offlineGraceDays": 3,
+      "devicesPerLicense": 3,
+      "restoreUrl": "https://moxsh.app/account/restore"
+    },
+    "refundPolicy": "订阅首 7 天未使用高级功能可退；终身版 14 天内可退。",
+    "taxIncluded": true,
+    "note": "订阅通过爱发电包月赞助实现，自动续期；可随时取消。"
+  },
+  "compatibility": {
+    "minAppVersion": "0.9.0",
+    "minPluginApi": "1.0",
+    "android": { "minSdk": 26, "targetSdk": 35 },
+    "abis": ["universal"],
+    "supportedOs": ["android"]
+  },
+  "distribution": {
+    "type": "registry",
+    "channel": "stable",
+    "artifact": {
+      "url": "https://cdn.moxsh.app/plugins/ai-pro-3.1.0.moxp",
+      "size": 2145800,
+      "sha256": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+      "format": "moxp",
+      "compression": "zstd"
+    },
+    "registry": { "name": "moxsh-official", "url": "https://registry.moxsh.app" },
+    "autoUpdate": true
+  },
+  "entrypoints": {
+    "registrar": "app.moxsh.ai.pro.AiProRegistrar",
+    "screen": "app.moxsh.ai.pro.ui.AiChatScreen",
+    "services": [{ "name": "AiAgentService", "class": "app.moxsh.ai.pro.AiAgentService", "foreground": true }],
+    "hooks": ["onInstall", "onEnable"]
+  },
+  "permissions": [
+    { "name": "network", "reason": "调用你配置的 AI 模型接口需要联网" },
+    { "name": "storage.read", "reason": "读取你让它分析的文件内容", "optional": true },
+    { "name": "storage.write", "reason": "把 AI 生成的脚本/文件保存到本地", "optional": true },
+    { "name": "exec", "reason": "Agent 工具执行终端命令（每次都会先征得你同意）", "optional": true }
+  ],
+  "dependencies": {
+    "plugins": [{ "id": "com.moxsh.plugin.core", "version": ">=1.0.0" }]
+  },
+  "capabilities": ["ai.provider", "ai.skill", "ai.tool"],
+  "settings": [
+    { "key": "defaultProvider", "type": "select", "label": "默认模型", "default": "zhipu", "options": [{ "value": "deepseek", "label": "DeepSeek" }, { "value": "zhipu", "label": "智谱 GLM" }, { "value": "qwen", "label": "通义千问" }, { "value": "moonshot", "label": "Kimi" }, { "value": "local", "label": "本地模型" }] },
+    { "key": "apiKey", "type": "password", "label": "API Key", "description": "经 AndroidKeyStore AES-GCM 加密存储，不上传。" },
+    { "key": "temperature", "type": "float", "label": "温度", "default": 0.7, "min": 0, "max": 2, "step": 0.1, "advanced": true },
+    { "key": "dangerousTools", "type": "bool", "label": "允许危险工具（需二次确认）", "default": false, "advanced": true, "restartRequired": false }
+  ],
+  "i18n": { "defaultLocale": "zh-Hans", "locales": ["zh-Hans", "en"], "path": "locales/" },
+  "changelog": [
+    { "version": "3.1.0", "date": "2026-09-28", "changes": ["订阅制上线", "新增 Agent 工具危险分级"] },
+    { "version": "3.0.0", "date": "2026-08-15", "changes": ["重构技能系统", "支持自定义技能"], "breaking": true }
+  ],
+  "integrity": {
+    "checksum": { "algo": "sha256", "value": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789" },
+    "signature": { "algo": "ed25519", "value": "MEUCIQ...aipro...sig", "keyId": "moxlabs-2026", "timestamp": "2026-09-28T04:00:00Z" }
+  },
+  "createdAt": "2026-06-01T00:00:00Z",
+  "updatedAt": "2026-09-28T04:00:00Z"
+}

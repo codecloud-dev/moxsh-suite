@@ -1,0 +1,422 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://moxsh.app/spec/plugin-manifest.schema.json",
+  "title": "Moxsh Plugin Manifest",
+  "description": "moxsh 插件清单 moxsh-plugin.json 规范 v1.0。描述插件身份、来源（开源/闭源）、定价与授权（含爱发电）、兼容性、分发、入口、权限、依赖与签名。",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name", "version", "author", "license", "visibility", "compatibility", "distribution", "entrypoints"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0", "description": "清单规范版本，本规范固定为 1.0。" },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$",
+      "minLength": 6,
+      "maxLength": 128,
+      "description": "全局唯一插件标识，反向域名风格，如 com.moxsh.plugin.distro。发布后不可更改。"
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 64, "description": "展示名称（默认语言）。" },
+    "nameI18n": { "$ref": "#/$defs/i18nString" },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "description": "语义化版本 SemVer 2.0.0，如 1.2.0 / 2.0.0-beta.1。"
+    },
+    "author": { "$ref": "#/$defs/person" },
+    "contributors": { "type": "array", "items": { "$ref": "#/$defs/person" }, "maxItems": 64 },
+    "publisher": { "$ref": "#/$defs/publisher" },
+    "description": { "type": "string", "maxLength": 200, "description": "一句话简介（默认语言），用于列表页。" },
+    "descriptionI18n": { "$ref": "#/$defs/i18nString" },
+    "longDescription": { "type": "string", "maxLength": 8000, "description": "详情页长文，支持 Markdown。" },
+    "longDescriptionI18n": { "$ref": "#/$defs/i18nString" },
+    "icon": { "type": "string", "description": "图标相对路径或 https URL，建议 512x512 PNG/WebP。", "pattern": "^(https://|\\./|[a-zA-Z0-9_./-]+\\.(png|webp|svg))" },
+    "banner": { "type": "string", "description": "详情页横幅图相对路径或 https URL，建议 16:9。" },
+    "screenshots": { "type": "array", "items": { "type": "string" }, "maxItems": 12, "description": "截图列表，最多 12 张。" },
+    "videos": { "type": "array", "items": { "type": "object", "required": ["url"], "properties": { "url": { "type": "string", "format": "uri" }, "title": { "type": "string" }, "poster": { "type": "string" } }, "additionalProperties": false } },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/category" },
+      "description": "所属分类，1~4 个。"
+    },
+    "tags": { "type": "array", "items": { "type": "string", "maxLength": 24 }, "maxItems": 20, "uniqueItems": true },
+    "keywords": { "type": "array", "items": { "type": "string" }, "maxItems": 30, "uniqueItems": true, "description": "搜索关键词（可含中英）。" },
+    "homepage": { "type": "string", "format": "uri", "description": "插件主页/文档地址。" },
+    "repository": { "$ref": "#/$defs/repository" },
+    "issues": { "type": "string", "format": "uri", "description": "问题反馈地址。" },
+    "license": { "$ref": "#/$defs/license" },
+    "visibility": {
+      "type": "string",
+      "enum": ["open-source", "closed-source", "source-available"],
+      "description": "可见性：open-source 开源；closed-source 闭源（仅分发编译产物）；source-available 源码可见但限制使用。"
+    },
+    "sourceCode": { "$ref": "#/$defs/sourceCode" },
+    "pricing": { "$ref": "#/$defs/pricing" },
+    "compatibility": { "$ref": "#/$defs/compatibility" },
+    "distribution": { "$ref": "#/$defs/distribution" },
+    "entrypoints": { "$ref": "#/$defs/entrypoints" },
+    "permissions": { "type": "array", "items": { "$ref": "#/$defs/permission" }, "uniqueItems": true },
+    "dependencies": { "$ref": "#/$defs/dependencies" },
+    "capabilities": { "type": "array", "items": { "$ref": "#/$defs/capability" }, "uniqueItems": true, "description": "插件对外暴露的能力声明，用于市场筛选与宿主调度。" },
+    "settings": { "type": "array", "items": { "$ref": "#/$defs/setting" }, "description": "插件可配置项声明，宿主据此生成图形化设置界面（面向小白）。" },
+    "i18n": { "$ref": "#/$defs/i18nMeta" },
+    "changelog": { "type": "array", "items": { "$ref": "#/$defs/releaseNote" }, "maxItems": 100 },
+    "marketplace": { "$ref": "#/$defs/marketplace" },
+    "integrity": { "$ref": "#/$defs/integrity" },
+    "terms": { "type": "string", "format": "uri", "description": "服务条款地址。" },
+    "privacy": { "type": "string", "format": "uri", "description": "隐私政策地址。" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  },
+
+  "$defs": {
+    "i18nString": {
+      "type": "object",
+      "description": "语言标签到文案的映射，BCP-47，如 zh-Hans / en / zh-Hant。",
+      "propertyNames": { "pattern": "^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$" },
+      "additionalProperties": { "type": "string" }
+    },
+    "person": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "email": { "type": "string", "format": "email" },
+        "url": { "type": "string", "format": "uri" },
+        "moxId": { "type": "string", "description": "mox-id 账号标识（mox 家族通行证）。" },
+        "avatar": { "type": "string" }
+      }
+    },
+    "publisher": {
+      "type": "object",
+      "description": "发布方主体。托管市场时用于展示与鉴权。",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "email": { "type": "string", "format": "email" },
+        "verified": { "type": "boolean", "default": false, "description": "是否通过市场方认证。" },
+        "moxId": { "type": "string" },
+        "certFingerprint": { "type": "string", "description": "发布签名证书指纹 sha256:..." }
+      }
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "system", "container", "terminal", "development", "networking", "security",
+        "ai", "automation", "theming", "file", "productivity", "multimedia",
+        "education", "gaming", "utility", "widget", "integration", "other"
+      ]
+    },
+    "repository": {
+      "type": "object",
+      "required": ["type", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["git", "hg", "svn", "other"] },
+        "url": { "type": "string", "format": "uri" },
+        "directory": { "type": "string", "description": "monorepo 内的子目录。" },
+        "ref": { "type": "string", "description": "标签或提交号。" }
+      }
+    },
+    "license": {
+      "type": "object",
+      "required": ["spdx"],
+      "additionalProperties": false,
+      "properties": {
+        "spdx": { "type": "string", "description": "SPDX 标识，如 MIT / Apache-2.0 / GPL-3.0-only / LicenseRef-Proprietary。闭源专有填 LicenseRef-Proprietary。" },
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "file": { "type": "string", "description": "仓库内许可证文件相对路径。" }
+      }
+    },
+    "sourceCode": {
+      "type": "object",
+      "description": "源码位置。开源必填；source-available 建议填；闭源可省略。",
+      "additionalProperties": false,
+      "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "license": { "type": "string" },
+        "notes": { "type": "string" },
+        "buildDocs": { "type": "string", "format": "uri", "description": "自助构建说明地址。" }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "description": "定价与授权。免费插件填 model=free。",
+      "required": ["model"],
+      "additionalProperties": false,
+      "properties": {
+        "model": { "type": "string", "enum": ["free", "paid", "freemium", "subscription", "donation", "ad-supported"] },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$", "description": "ISO 4217 货币代码，如 CNY / USD。" },
+        "price": { "type": "number", "minimum": 0, "description": "主价格（model=paid 时）。买断或首期价格。" },
+        "compareAtPrice": { "type": "number", "minimum": 0, "description": "划线原价，用于促销展示。" },
+        "trial": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "days": { "type": "integer", "minimum": 0, "maximum": 365 },
+            "featureLimited": { "type": "boolean", "description": "试用期是否功能受限。" }
+          }
+        },
+        "freeTier": {
+          "type": "object",
+          "description": "freemium 的免费档说明。",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "features": { "type": "array", "items": { "type": "string" } },
+            "limits": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean"] } }
+          }
+        },
+        "plans": {
+          "type": "array",
+          "description": "付费方案列表；订阅制必填。",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "price", "billing"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{1,31}$" },
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "price": { "type": "number", "minimum": 0 },
+              "compareAtPrice": { "type": "number", "minimum": 0 },
+              "billing": { "type": "string", "enum": ["one-time", "monthly", "quarterly", "yearly", "lifetime"] },
+              "quota": { "type": "object", "description": "用量配额，如 {\"devices\":3,\"api_calls\":10000}", "additionalProperties": { "type": ["string", "number", "boolean"] } },
+              "features": { "type": "array", "items": { "type": "string" } },
+              "recommended": { "type": "boolean", "default": false }
+            }
+          }
+        },
+        "provider": {
+          "type": "object",
+          "description": "收款/授权渠道。爱发电为国内首选。",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "type": "string", "enum": ["afdian", "internal", "gplay", "appstore", "custom"] },
+            "afdian": {
+              "type": "object",
+              "description": "爱发电（afdian.com）电铺/赞助配置。",
+              "additionalProperties": false,
+              "properties": {
+                "creatorPage": { "type": "string", "format": "uri", "description": "创作者主页，如 https://afdian.com/a/moxsh" },
+                "shopItems": {
+                  "type": "array",
+                  "description": "方案与爱发电「电铺」商品的映射。",
+                  "items": {
+                    "type": "object",
+                    "required": ["planId", "itemId"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "planId": { "type": "string", "description": "对应 pricing.plans[].id" },
+                      "itemId": { "type": "string", "description": "爱发电商品/方案 ID" },
+                      "skuId": { "type": "string" }
+                    }
+                  }
+                },
+                "orderQueryTemplate": { "type": "string", "description": "订单号校验请求模板，支持 {orderNo} 占位，如 https://api.moxsh.app/license/afdian/verify?order={orderNo}" },
+                "verifyEndpoint": { "type": "string", "format": "uri", "description": "服务端授权校验接口（推荐：经自建服务中转，避免泄露爱发电 API Token）。" },
+                "unlockCodeFormat": { "type": "string", "description": "解锁码格式正则，如 ^MOXSH-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$" },
+                "bindBy": { "type": "string", "enum": ["order-no", "activation-code", "account", "afdian-uid"], "description": "用户凭证类型。" }
+              }
+            },
+            "internal": { "type": "object", "additionalProperties": false, "properties": { "endpoint": { "type": "string", "format": "uri" }, "productId": { "type": "string" } } },
+            "custom": { "type": "object", "additionalProperties": false, "properties": { "url": { "type": "string", "format": "uri" }, "instructions": { "type": "string" } } }
+          }
+        },
+        "license": {
+          "type": "object",
+          "description": "授权校验方式。",
+          "additionalProperties": false,
+          "properties": {
+            "required": { "type": "boolean", "default": true },
+            "type": { "type": "string", "enum": ["activation-code", "account-bind", "order-query", "offline-blob", "none"] },
+            "offlineGraceDays": { "type": "integer", "minimum": 0, "maximum": 90, "description": "离线宽限天数。" },
+            "devicesPerLicense": { "type": "integer", "minimum": 1, "description": "单授权可激活设备数。" },
+            "restoreUrl": { "type": "string", "format": "uri", "description": "找回/迁移授权入口。" }
+          }
+        },
+        "refundPolicy": { "type": "string", "description": "退款政策说明或链接。" },
+        "taxIncluded": { "type": "boolean" },
+        "note": { "type": "string", "description": "补充说明，如「学生优惠联系作者」。" }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "required": ["minAppVersion"],
+      "additionalProperties": false,
+      "properties": {
+        "minAppVersion": { "type": "string", "description": "最低 moxsh App 版本（SemVer）。" },
+        "maxAppVersion": { "type": ["string", "null"], "description": "最高兼容版本，null 表示不限。" },
+        "minPluginApi": { "type": "string", "description": "所需 plugin-api 最低版本。" },
+        "android": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "minSdk": { "type": "integer", "minimum": 21, "maximum": 99 }, "targetSdk": { "type": "integer", "minimum": 21, "maximum": 99 } }
+        },
+        "abis": { "type": "array", "items": { "type": "string", "enum": ["arm64-v8a", "armeabi-v7a", "x86", "x86_64", "universal"] }, "description": "所需 ABI。纯 Kotlin 插件可填 universal。" },
+        "arches": { "type": "array", "items": { "type": "string", "enum": ["aarch64", "arm", "x86", "x86_64", "riscv64"] } },
+        "supportedOs": { "type": "array", "items": { "type": "string", "enum": ["android", "harmony", "linux"] }, "default": ["android"] },
+        "termuxCompat": { "type": "string", "description": "兼容的 Termux 版本区间，如 >=0.118。" },
+        "excludedDevices": { "type": "array", "items": { "type": "string" }, "description": "不兼容设备型号。" },
+        "requiresRoot": { "type": "boolean", "default": false },
+        "requiresProot": { "type": "boolean", "default": false }
+      }
+    },
+    "distribution": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["registry", "direct", "builtin", "side-load"], "description": "builtin 为随 App 内置（系统插件）；direct 为直链分发；registry 走市场仓库。" },
+        "channel": { "type": "string", "enum": ["stable", "beta", "nightly", "canary"], "default": "stable" },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "url": { "type": "string", "description": "下载直链或相对路径。" },
+            "size": { "type": "integer", "minimum": 0, "description": "字节数。" },
+            "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+            "format": { "type": "string", "enum": ["moxp", "apk", "dex-bundle", "jar", "zip"] },
+            "compression": { "type": "string", "enum": ["none", "gzip", "zstd", "xz"] }
+          }
+        },
+        "mirrors": { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "镜像加速地址（国内网络友好）。" },
+        "registry": { "type": "object", "additionalProperties": false, "properties": { "name": { "type": "string" }, "url": { "type": "string", "format": "uri" } } },
+        "autoUpdate": { "type": "boolean", "default": true },
+        "releaseNotes": { "type": "string" },
+        "installScript": { "type": "string", "description": "可选安装脚本（谨慎使用，需签名）。" }
+      }
+    },
+    "entrypoints": {
+      "type": "object",
+      "description": "插件如何接入宿主。至少提供 screen、registrar 或 application 之一。",
+      "additionalProperties": false,
+      "properties": {
+        "application": { "type": "string", "description": "插件应用类（Application 子类）全限定名。" },
+        "screen": { "type": "string", "description": "主界面 Composable/Activity 全限定名。" },
+        "registrar": { "type": "string", "description": "注册入口类全限定名，宿主调用其 registerAll(host)。" },
+        "services": { "type": "array", "items": { "type": "object", "required": ["name", "class"], "additionalProperties": false, "properties": { "name": { "type": "string" }, "class": { "type": "string" }, "foreground": { "type": "boolean", "default": false } } } },
+        "receivers": { "type": "array", "items": { "type": "object", "required": ["name", "class"], "additionalProperties": false, "properties": { "name": { "type": "string" }, "class": { "type": "string" }, "actions": { "type": "array", "items": { "type": "string" } } } } },
+        "providers": { "type": "array", "items": { "type": "object", "required": ["name", "authority"], "additionalProperties": false, "properties": { "name": { "type": "string" }, "authority": { "type": "string" } } } },
+        "activities": { "type": "array", "items": { "type": "object", "required": ["name", "class"], "additionalProperties": false, "properties": { "name": { "type": "string" }, "class": { "type": "string" }, "exported": { "type": "boolean", "default": false } } } },
+        "commands": { "type": "array", "description": "注入到终端 PATH 的命令。", "items": { "type": "object", "required": ["name"], "additionalProperties": false, "properties": { "name": { "type": "string" }, "usage": { "type": "string" }, "description": { "type": "string" } } } },
+        "widgets": { "type": "array", "items": { "type": "object", "required": ["name", "class"], "additionalProperties": false, "properties": { "name": { "type": "string" }, "class": { "type": "string" }, "minWidth": { "type": "integer" }, "minHeight": { "type": "integer" } } } },
+        "hooks": { "type": "array", "items": { "type": "string", "enum": ["onInstall", "onEnable", "onDisable", "onUninstall", "onBoot", "onSessionStart", "onThemeChange"] } }
+      },
+      "anyOf": [{ "required": ["screen"] }, { "required": ["registrar"] }, { "required": ["application"] }]
+    },
+    "permission": {
+      "type": "object",
+      "required": ["name", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": [
+            "storage.read", "storage.write", "network", "exec", "root",
+            "container", "termux.api", "clipboard", "notification", "boot",
+            "location", "camera", "microphone", "contacts", "phone", "sms",
+            "account", "background", "overlay", "install.packages"
+          ]
+        },
+        "reason": { "type": "string", "maxLength": 200, "description": "向用户解释为何需要（面向小白，必须通俗）。" },
+        "optional": { "type": "boolean", "default": false, "description": "是否可选（拒绝后仍可运行）。" }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "plugins": { "type": "array", "items": { "type": "object", "required": ["id"], "additionalProperties": false, "properties": { "id": { "type": "string" }, "version": { "type": "string", "description": "SemVer 区间，如 >=1.0.0 <2.0.0" }, "optional": { "type": "boolean", "default": false } } } },
+        "packages": { "type": "array", "items": { "type": "object", "required": ["manager", "name"], "additionalProperties": false, "properties": { "manager": { "type": "string", "enum": ["apt", "apk", "apk-tools", "moxpkg", "pip", "npm", "cargo", "gem"] }, "name": { "type": "string" }, "version": { "type": "string" } } } },
+        "native": { "type": "array", "items": { "type": "object", "required": ["name", "abi"], "additionalProperties": false, "properties": { "name": { "type": "string" }, "abi": { "type": "string" }, "version": { "type": "string" } } } }
+      }
+    },
+    "capability": {
+      "type": "string",
+      "enum": [
+        "terminal.ui", "terminal.render", "terminal.session", "container.proot", "container.docker", "container.custom",
+        "ai.provider", "ai.skill", "ai.tool", "widget.home", "boot.auto-start", "tasker.action",
+        "float.window", "theming", "theming.pack", "file.manager", "network.proxy", "storage.encrypt",
+        "notification", "clipboard", "scheduler.cron", "input.ime", "root.shell"
+      ]
+    },
+    "setting": {
+      "type": "object",
+      "required": ["key", "type", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]{0,63}$" },
+        "type": { "type": "string", "enum": ["bool", "int", "float", "string", "password", "select", "multiselect", "color", "path", "time", "duration"] },
+        "label": { "type": "string" },
+        "labelI18n": { "$ref": "#/$defs/i18nString" },
+        "description": { "type": "string" },
+        "default": { "type": ["string", "number", "boolean", "array"] },
+        "options": { "type": "array", "items": { "type": "object", "required": ["value", "label"], "additionalProperties": false, "properties": { "value": { "type": ["string", "number", "boolean"] }, "label": { "type": "string" } } }, "description": "select/multiselect 的选项。" },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "step": { "type": "number" },
+        "unit": { "type": "string" },
+        "scope": { "type": "string", "enum": ["global", "profile", "session"], "default": "global" },
+        "restartRequired": { "type": "boolean", "default": false },
+        "advanced": { "type": "boolean", "default": false, "description": "高级项：小白模式默认折叠。" }
+      }
+    },
+    "i18nMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaultLocale": { "type": "string", "description": "默认语言，如 zh-Hans。" },
+        "locales": { "type": "array", "items": { "type": "string" }, "description": "已支持语言列表。" },
+        "path": { "type": "string", "description": "语言包目录相对路径，如 locales/。" }
+      }
+    },
+    "releaseNote": {
+      "type": "object",
+      "required": ["version", "date", "changes"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "changes": { "type": "array", "items": { "type": "string" } },
+        "breaking": { "type": "boolean", "default": false },
+        "notes": { "type": "string" }
+      }
+    },
+    "marketplace": {
+      "type": "object",
+      "description": "市场侧元信息，通常由市场写入，作者可留空。",
+      "additionalProperties": false,
+      "properties": {
+        "featured": { "type": "boolean", "default": false },
+        "verified": { "type": "boolean", "default": false },
+        "editorChoice": { "type": "boolean", "default": false },
+        "rating": { "type": "number", "minimum": 0, "maximum": 5 },
+        "ratingCount": { "type": "integer", "minimum": 0 },
+        "downloads": { "type": "integer", "minimum": 0 },
+        "installsActive": { "type": "integer", "minimum": 0 },
+        "publishedAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "publisherNote": { "type": "string" },
+        "badges": { "type": "array", "items": { "type": "string", "enum": ["official", "verified", "editor-choice", "new", "trending", "open-source", "paid", "top-rated"] } }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "checksum": { "type": "object", "required": ["algo", "value"], "additionalProperties": false, "properties": { "algo": { "type": "string", "enum": ["sha256", "sha512"] }, "value": { "type": "string" } } },
+        "signature": { "type": "object", "required": ["algo", "value"], "additionalProperties": false, "properties": { "algo": { "type": "string", "enum": ["ed25519", "rsa-pss", "ecdsa"] }, "value": { "type": "string" }, "keyId": { "type": "string" }, "certFingerprint": { "type": "string" }, "timestamp": { "type": "string", "format": "date-time" } } }
+      }
+    }
+  }
+}

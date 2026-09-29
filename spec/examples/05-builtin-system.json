@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "1.0",
+  "id": "com.moxsh.plugin.distro",
+  "name": "发行版管理器",
+  "nameI18n": { "en": "Distro Manager" },
+  "version": "1.0.0",
+  "author": { "name": "moxsh 官方", "url": "https://moxsh.app", "moxId": "mox_official" },
+  "publisher": { "id": "moxsh", "name": "moxsh", "url": "https://moxsh.app", "verified": true },
+  "description": "针对小白的图形化容器管理：一键装 Ubuntu / Debian / Kali / Alpine，全程零命令行。",
+  "descriptionI18n": { "en": "Beginner-friendly graphical container manager: one-tap install Ubuntu / Debian / Kali / Alpine, zero CLI." },
+  "longDescription": "## 发行版管理器（App 内置）\n\n- 一键安装 Ubuntu / Debian / Kali / Alpine 或自定义 rootfs\n- 已装发行版可启动、备份、恢复、删除\n- 图形化进度：下载 → 校验 → 解压 → 初始化\n\n系统内置插件，随 moxsh App 一同分发。",
+  "icon": "assets/icon.png",
+  "screenshots": ["assets/s1.png", "assets/s2.png"],
+  "categories": ["container", "system"],
+  "tags": ["distro", "proot", "ubuntu", "debian", "kali", "alpine", "beginner"],
+  "keywords": ["发行版", "容器", "Linux", "一键安装", "小白"],
+  "homepage": "https://moxsh.app/docs/distro",
+  "repository": { "type": "git", "url": "https://github.com/codecloud-dev/moxsh-terminal", "directory": "moxsh/plugins/plugin-distro" },
+  "license": { "spdx": "Apache-2.0", "name": "Apache License 2.0", "file": "LICENSE" },
+  "visibility": "open-source",
+  "sourceCode": { "url": "https://github.com/codecloud-dev/moxsh-terminal/tree/main/moxsh/plugins/plugin-distro", "license": "Apache-2.0" },
+  "pricing": { "model": "free", "note": "系统内置，完全免费。" },
+  "compatibility": {
+    "minAppVersion": "0.9.0",
+    "minPluginApi": "1.0",
+    "android": { "minSdk": 26, "targetSdk": 35 },
+    "abis": ["arm64-v8a", "armeabi-v7a", "x86_64", "universal"],
+    "supportedOs": ["android"],
+    "requiresRoot": false,
+    "requiresProot": true
+  },
+  "distribution": {
+    "type": "builtin",
+    "channel": "stable",
+    "artifact": { "format": "moxp", "size": 0, "compression": "none" },
+    "autoUpdate": true
+  },
+  "entrypoints": {
+    "registrar": "com.moxsh.plugin.distro.DistroPluginRegistrar",
+    "screen": "com.moxsh.plugin.distro.DistroManagerScreen",
+    "commands": [
+      { "name": "moxdistro", "usage": "moxdistro install <name>", "description": "命令行安装发行版（等价于图形界面）" }
+    ],
+    "hooks": ["onInstall", "onEnable", "onBoot", "onSessionStart"]
+  },
+  "permissions": [
+    { "name": "storage.write", "reason": "把发行版镜像解压到 App 数据目录" },
+    { "name": "network", "reason": "下载发行版 rootfs 镜像" },
+    { "name": "exec", "reason": "启动容器需要运行 proot 进程" },
+    { "name": "install.packages", "reason": "在容器内安装软件包", "optional": false }
+  ],
+  "dependencies": {
+    "plugins": [{ "id": "com.moxsh.plugin.core", "version": ">=1.0.0" }],
+    "native": [{ "name": "proot", "abi": "arm64-v8a", "version": ">=6.1" }]
+  },
+  "capabilities": ["container.proot", "terminal.session"],
+  "settings": [
+    { "key": "defaultMirror", "type": "select", "label": "国内镜像源", "default": "tuna", "options": [{ "value": "tuna", "label": "清华 TUNA" }, { "value": "ustc", "label": "中科大 USTC" }, { "value": "aliyun", "label": "阿里云" }] },
+    { "key": "defaultDistro", "type": "select", "label": "默认发行版", "default": "ubuntu", "options": [{ "value": "ubuntu", "label": "Ubuntu" }, { "value": "debian", "label": "Debian" }, { "value": "kali", "label": "Kali" }, { "value": "alpine", "label": "Alpine" }] },
+    { "key": "autoClean", "type": "bool", "label": "安装后清理缓存", "default": true }
+  ],
+  "i18n": { "defaultLocale": "zh-Hans", "locales": ["zh-Hans", "en"], "path": "locales/" },
+  "changelog": [
+    { "version": "1.0.0", "date": "2026-07-01", "changes": ["首个版本", "支持四大发行版一键安装、备份/恢复/删除"] }
+  ],
+  "marketplace": {
+    "featured": true,
+    "verified": true,
+    "badges": ["official", "open-source"],
+    "downloads": 0
+  },
+  "integrity": {
+    "checksum": { "algo": "sha256", "value": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "signature": { "algo": "ed25519", "value": "MEQCIB...distro...sig", "keyId": "moxsh-official", "timestamp": "2026-07-01T00:00:00Z" }
+  },
+  "createdAt": "2026-06-01T00:00:00Z",
+  "updatedAt": "2026-07-01T00:00:00Z"
+}
