@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="a">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>moxsh · Apple 忠实复刻（iOS 27 Liquid Glass，实时可点）</title>
+<style>
+  /* ===== 基础 ===== */
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; height:100%;}
+  body{
+    font-family:"SF Pro SC","PingFang SC","HanHei SC","SF Pro Text","Helvetica Neue",Helvetica,Arial,"Microsoft YaHei",sans-serif;
+    /* 字体清晰：抗锯齿 + 灰度 + 优化字距 */
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;
+    font-synthesis:none;
+    background:#0e1116; color:#e9edf3;
+    display:flex; min-height:100%; overflow:hidden;
+  }
+  /* 左侧调色板（固定） */
+  .palette{
+    width:312px; flex:0 0 312px; height:100vh; overflow:auto;
+    padding:22px 18px 30px; background:#11161d; border-right:1px solid #1c232e;
+  }
+  .palette h1{font-size:17px; font-weight:600; margin:0 0 2px; letter-spacing:.2px;}
+  .palette .sub{font-size:12px; color:#8a96a6; margin:0 0 16px; line-height:1.5;}
+  .palette h2{font-size:12px; font-weight:600; color:#8a96a6; text-transform:uppercase; letter-spacing:1px; margin:18px 0 8px;}
+  .styles{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .style-btn{
+    border:1.5px solid #232c39; background:#161d26; color:#cdd6e2;
+    border-radius:12px; padding:10px 8px; font-size:13px; cursor:pointer; text-align:left;
+    transition:.15s; line-height:1.3;
+  }
+  .style-btn .k{display:block; font-size:11px; color:#7b8696;} .style-btn .n{font-weight:600;}
+  .style-btn:hover{border-color:#3a4658;}
+  .style-btn.active{border-color:var(--pick,#5eead4); color:#fff; box-shadow:0 0 0 1px var(--pick,#5eead4) inset;}
+  .legend{font-size:11.5px; color:#9aa6b6; line-height:1.7; background:#161d26; border:1px solid #232c39; border-radius:12px; padding:10px 12px; margin-top:6px;}
+  .legend b{color:#dfe6f0; font-weight:600;}
+  .note{font-size:11px; color:#7b8696; line-height:1.6; margin-top:14px; border-top:1px dashed #232c39; padding-top:12px;}
+  .note a{color:#7fd8c8;}
+
+  /* ===== 手机舞台 ===== */
+  .stage{flex:1; height:100vh; display:flex; align-items:center; justify-content:center; padding:18px; overflow:auto;
+    background:radial-gradient(80% 80% at 50% 0%,#1a2230,#0e1116 70%);}
+  .phone{
+    position:relative; width:384px; height:832px;           /* 19.5:9 真实比例 */
+    background:#05070b; border-radius:58px; padding:11px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6), 0 0 0 2px #2a2f38, inset 0 0 0 4px #06080c;
+    transform-origin:center center; transition:transform .2s ease;
+    flex:0 0 auto;
+  }
+  /* 侧边按钮 */
+  .btn-vol,.btn-pw{position:absolute; background:#2a2f38; border-radius:3px;}
+  .btn-vol{right:-3px; top:170px; width:3px; height:62px;}
+  .btn-pw{right:-3px; top:250px; width:3px; height:88px;}
+  .btn-vol2{left:-3px; top:200px; width:3px; height:34px; background:#2a2f38; border-radius:3px; position:absolute;}
+
+  .screen{
+    --mx:50%; --my:18%;
+    position:relative; width:100%; height:100%; border-radius:48px; overflow:hidden;
+    background:var(--wall); isolation:isolate;
+    user-select:none; -webkit-user-select:none;   /* 拖动手势不误选文字 */
+  }
+  .screen input,.screen textarea{user-select:text; -webkit-user-select:text;}
+  .screen ::selection{background:color-mix(in srgb, var(--accent) 26%, transparent);}
+  /* 环境背光（让玻璃读得出）— 折射质感：blur + 噪声位移，像透过磨砂玻璃看出去 */
+  @supports ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
+    .screen::before{
+      content:""; position:absolute; inset:-12%; z-index:0;
+      background:
+        radial-gradient(45% 30% at 18% 12%, var(--blob1), transparent 60%),
+        radial-gradient(42% 30% at 86% 26%, var(--blob2), transparent 60%),
+        radial-gradient(55% 38% at 55% 95%, var(--blob3), transparent 62%);
+      filter:blur(28px) url(#glassRefr); opacity:.95;
+    }
+  }
+  @supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
+    .screen::before{
+      content:""; position:absolute; inset:-12%; z-index:0;
+      background:
+        radial-gradient(45% 30% at 18% 12%, var(--blob1), transparent 60%),
+        radial-gradient(42% 30% at 86% 26%, var(--blob2), transparent 60%),
+        radial-gradient(55% 38% at 55% 95%, var(--blob3), transparent 62%);
+      filter:blur(26px); opacity:.95;
+    }
+  }
+  /* 跟随手指的高光（光在磨砂玻璃后移动 = Liquid Glass 的灵魂） */
+  .screen::after{
+    content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:radial-gradient(240px 240px at var(--mx) var(--my), rgba(255,255,255,.18), rgba(255,255,255,0) 70%);
+    mix-blend-mode:screen; opacity:.9; transition:opacity .25s ease;
+  }
+  /* 玻璃工具类（全局通透度由 --ga 控制） */
+  .glass{
+    position:relative; overflow:hidden;
+    background:rgba(var(--gf), var(--ga));
+    backdrop-filter:blur(var(--blur)) saturate(180%) brightness(1.04);
+    -webkit-backdrop-filter:blur(var(--blur)) saturate(180%) brightness(1.04);
+    border:1px solid var(--gb);
+    /* 多边缘高光（左上最亮，其余渐弱）—— 真实玻璃的镜面倒角 */
+    box-shadow:
+      var(--gsh, 0 10px 34px rgba(0,0,0,.24)),
+      inset 0 1px 1px var(--gsp, rgba(255,255,255,.75)),
+      inset 0 -1px 1px rgba(255,255,255,.20),
+      inset 1px 0 1px rgba(255,255,255,.28),
+      inset -1px 0 1px rgba(255,255,255,.16);
+  }
+  /* 玻璃斜向镜面光泽（135° 高光，screen 混合，跟随通透度淡出） */
+  .glass::after{
+    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+    background:linear-gradient(135deg, rgba(255,255,255,.60), rgba(255,255,255,0) 42%);
+    mix-blend-mode:screen; opacity:var(--gsheen,.34);
+  }
+
+  /* 灵动岛 */
+  .island{position:absolute; top:13px; left:50%; transform:translateX(-50%); width:118px; height:34px; background:#000; border-radius:20px; z-index:60; display:flex; align-items:center; justify-content:flex-end; padding-right:12px;}
+  .island .cam{width:9px; height:9px; border-radius:50%; background:#0c1320; box-shadow:inset 0 0 0 2px #1a2740;}
+  /* 状态栏 */
+  .statusbar{position:absolute; top:14px; left:0; right:0; height:40px; z-index:55; display:flex; align-items:center; justify-content:space-between; padding:0 30px; font-size:14px; font-weight:600; color:var(--sb); pointer-events:none;}
+  .statusbar .right{display:flex; align-items:center; gap:6px; font-size:12px;}
+  .statusbar .right svg{width:17px; height:13px;}
+  /* Home 指示条 */
+  .home{position:absolute; bottom:9px; left:50%; transform:translateX(-50%); width:128px; height:5px; border-radius:3px; background:var(--home); z-index:58;}
+
+  /* ===== 视图 ===== */
+  .view{position:absolute; inset:0; display:none; flex-direction:column; z-index:10; padding:46px 0 104px; transition:opacity .26s cubic-bezier(.34,1.4,.5,1), transform .26s cubic-bezier(.34,1.4,.5,1);}
+  .view.on{display:flex;}
+  .scroll{flex:1; overflow-y:auto; padding:0 16px; -webkit-overflow-scrolling:touch;}
+  .scroll::-webkit-scrollbar{width:0;}
+
+  /* 大标题 → 内联（滚动收起） */
+  .htitle{font-size:34px; font-weight:700; letter-spacing:-.5px; padding:4px 16px 10px; color:var(--fg); transition:.2s;}
+  .toolbar{position:sticky; top:0; display:none; align-items:center; padding:8px 16px; margin-top:-46px; font-size:17px; font-weight:600; color:var(--fg); z-index:20;}
+  .view.scrolled .htitle{font-size:17px; font-weight:600; padding-top:8px;}
+  .view.scrolled .toolbar{display:flex;}
+
+  /* 卡片 */
+  .card{border-radius:20px; padding:14px 16px; margin:8px 0; color:var(--fg);}
+  .card h3{margin:0 0 4px; font-size:16px; font-weight:600;}
+  .card p{margin:0; font-size:13px; color:var(--muted); line-height:1.5;}
+  .row{display:flex; align-items:center; justify-content:space-between; padding:13px 4px; border-bottom:1px solid var(--hair);}
+  .row:last-child{border-bottom:none;}
+  .row .lab{font-size:15px; color:var(--fg);}
+  .row .val{font-size:14px; color:var(--muted);}
+
+  /* iOS 玻璃开关 */
+  .toggle{width:50px; height:30px; border-radius:15px; background:rgba(120,130,145,.35); position:relative; cursor:pointer; transition:.2s; flex:0 0 auto;}
+  .toggle.on{background:var(--accent);}
+  .toggle::after{content:""; position:absolute; top:2px; left:2px; width:26px; height:26px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:.2s;}
+  .toggle.on::after{left:22px;}
+
+  /* ===== 终端 ===== */
+  .term-wrap{margin:6px 16px; border-radius:24px; overflow:hidden; height:calc(100% - 12px); display:flex; flex-direction:column; touch-action:none; will-change:transform;}
+  .term-bar{display:flex; align-items:center; gap:7px; padding:12px 15px; font-size:12px; color:var(--muted); border-bottom:1px solid var(--hair);}
+  .sess-btn{font-size:12px; color:var(--fg); background:rgba(var(--gf),.5); border:1px solid var(--gb); padding:4px 10px; border-radius:10px; cursor:pointer; flex:0 0 auto; transition:.15s;}
+  .sess-btn:active{transform:scale(.95);}
+  .dot{width:10px; height:10px; border-radius:50%; box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18);}
+  .term-body{flex:1; overflow-y:auto; padding:13px 16px 14px; font-family:var(--mono); font-size:12.5px; line-height:1.72; color:var(--term-fg); letter-spacing:.1px;}
+  .term-body::-webkit-scrollbar{width:0;}
+  .term-line{white-space:pre-wrap; word-break:break-all;}
+  .term-line.cmd{color:var(--fg);}
+  .term-line.cmd .ps{color:var(--accent);}
+  .term-line.cmd .cd{color:var(--fg); font-weight:600;}
+  .term-line.err{color:#e5484d;}
+  .term-line.muted{color:var(--muted);}
+  .term-line.dim{color:var(--muted); opacity:.5;}
+  .term-input{display:flex; align-items:center; gap:8px; padding:11px 16px; border-top:1px solid var(--hair); font-family:var(--mono); font-size:12.5px;}
+  .term-input .ps{color:var(--accent); white-space:nowrap; font-weight:600;}
+  .term-input input{flex:1; background:transparent; border:none; outline:none; color:var(--term-fg); font-family:var(--mono); font-size:12.5px;}
+
+  /* 会话抽屉（收进终端，简单） */
+  .sess-sheet{position:absolute; left:16px; right:16px; top:62px; max-height:64%; z-index:68; border-radius:22px; padding:0; display:flex; flex-direction:column; transform:translateY(10px) scale(.98); opacity:0; visibility:hidden; pointer-events:none; transition:.26s cubic-bezier(.34,1.4,.5,1); overflow:hidden;}
+  .sess-sheet.open{opacity:1; visibility:visible; transform:none; pointer-events:auto;}
+  .ss-head{display:flex; justify-content:space-between; align-items:center; padding:14px 16px; font-size:16px; font-weight:600; color:var(--fg); border-bottom:1px solid var(--hair);}
+  .ss-x{cursor:pointer; color:var(--muted); font-size:18px; padding:0 4px;}
+  #ss-list{padding:8px 12px 14px;}
+  .sess{border-radius:18px; padding:14px; margin:8px 0; display:flex; align-items:center; gap:12px; cursor:pointer; transition:.15s;}
+  .sess.cur{outline:2px solid var(--accent);}
+  .sess .ava{width:42px; height:42px; border-radius:13px; display:grid; place-items:center; font-size:18px; background:rgba(var(--gf),.2);}
+  .sess .meta{flex:1;}
+  .sess .meta .nm{font-size:15px; font-weight:600; color:var(--fg);}
+  .sess .meta .ho{font-size:12px; color:var(--muted); font-family:var(--mono);}
+  .badge{font-size:11px; color:var(--accent); background:rgba(var(--gf),.18); padding:2px 8px; border-radius:20px;}
+
+  /* 分类页 */
+  .cat-search{display:flex; align-items:center; padding:11px 14px; margin:8px 0 12px; border-radius:16px;}
+  .cat-search input{flex:1; background:transparent; border:none; outline:none; color:var(--fg); font-size:14px; font-family:inherit;}
+  .cat-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .cat{border-radius:20px; padding:16px 14px; min-height:98px; display:flex; flex-direction:column; gap:6px; cursor:pointer; transition:transform .15s, box-shadow .15s; color:var(--fg);}
+  .cat:active{transform:scale(.97);}
+  .cat.feat{outline:1.5px solid var(--accent); box-shadow:0 0 0 4px rgba(var(--gf),.1);}
+  .cat .ic{display:grid; place-items:center; width:26px; height:26px; color:var(--accent);}
+  .cat .ic svg{width:26px; height:26px; display:block; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
+  .cat .nm{font-size:14px; font-weight:600;}
+  .cat .ds{font-size:11.5px; color:var(--muted); line-height:1.4;}
+
+  /* 设置里的 iOS 27 通透度滑块 */
+  .slider-wrap{padding:16px; margin:8px 0; border-radius:20px;}
+  .slider-wrap .top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;}
+  .slider-wrap .top .t{font-size:15px; font-weight:600; color:var(--fg);}
+  .slider-wrap .top .v{font-size:12px; color:var(--muted);}
+  input[type=range]{ -webkit-appearance:none; width:100%; height:6px; border-radius:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2)); outline:none;}
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
+    background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.3); cursor:pointer; border:1px solid rgba(0,0,0,.05);}
+  .scale-tags{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:8px;}
+  .reset-pill{font-size:12px; color:var(--fg); background:rgba(var(--gf),.16); border:1px solid var(--gb); padding:7px 14px; border-radius:14px; cursor:pointer; margin:8px 0; display:inline-block;}
+
+  /* 悬浮玻璃胶囊三键（滚动时收矮 = tabBarMinimizeBehavior） */
+  .tabbar{
+    position:absolute; left:50%; transform:translateX(-50%); bottom:30px; z-index:40;
+    width:calc(100% - 96px); height:64px; border-radius:26px; display:flex; align-items:center;
+    padding:0 8px; transition:height .32s cubic-bezier(.34,1.4,.5,1), bottom .32s cubic-bezier(.34,1.4,.5,1), opacity .32s ease;
+  }
+  .tabbar.min{height:54px; bottom:24px; opacity:.92;}
+  .tab{flex:1; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; color:var(--muted); position:relative; transition:.15s;}
+  .tab .ti{width:26px; height:26px; display:grid; place-items:center;}
+  .tab .ti svg{width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.8;}
+  .tab .tx{font-size:10.5px; font-weight:500;}
+  .tab.active{color:var(--accent);}
+  .tab.active::before{content:""; position:absolute; top:6px; width:52px; height:40px; border-radius:14px; background:color-mix(in srgb, var(--accent) 13%, transparent);}
+  .tab.active .ti,.tab.active .tx{position:relative; z-index:1;}
+  .tab .ti svg{transition:transform .2s cubic-bezier(.34,1.5,.5,1);}
+  .tab.active .ti svg{transform:scale(1.06);}
+
+  /* AI 面板（玻璃 sheet，带抓取条，上滑唤出） */
+  .ai-panel{
+    position:absolute; left:0; right:0; bottom:0; height:64%; z-index:70;
+    border-radius:30px 30px 48px 48px; display:flex; flex-direction:column;
+    transform:translateY(102%); transition:transform .46s cubic-bezier(.34,1.4,.5,1);
+    pointer-events:none; overflow:hidden; touch-action:none;
+  }
+  .ai-panel.open{transform:translateY(0); pointer-events:auto;}
+  .ai-grab{height:26px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; cursor:pointer;}
+  .ai-grab i{width:38px; height:5px; border-radius:3px; background:var(--gb); display:block; margin-top:8px;}
+  .ai-head{padding:2px 18px 10px; color:var(--fg);}
+  .ai-head .t{font-size:18px; font-weight:700;}
+  .ai-head .s{font-size:12px; color:var(--muted);}
+  .ai-log{flex:1; overflow-y:auto; padding:4px 18px; display:flex; flex-direction:column; gap:10px;}
+  .ai-log::-webkit-scrollbar{width:0;}
+  .msg{max-width:84%; padding:10px 13px; border-radius:16px; font-size:13.5px; line-height:1.5;}
+  .msg.u{align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:5px;}
+  .msg.a{align-self:flex-start; background:var(--bub,rgba(var(--gf),.18)); color:var(--fg); border-bottom-left-radius:5px; box-shadow:inset 0 0 0 1px var(--msg-bd,transparent);}
+  .msg.a code{display:block; margin-top:6px; font-family:var(--mono); font-size:12.5px; background:var(--code-bg,rgba(0,0,0,.25)); padding:7px 9px; border-radius:9px; color:var(--code-fg,var(--term-cmd));}
+  .msg.a .run{margin-top:8px; font-size:12px; color:var(--accent); cursor:pointer; font-weight:600;}
+  .ai-in{padding:12px 16px 22px; display:flex; gap:9px; align-items:center;}
+  .ai-in input{flex:1; border:none; outline:none; background:var(--field,rgba(var(--gf),.16)); border:1px solid var(--gb); color:var(--fg); border-radius:16px; padding:11px 14px; font-size:14px; font-family:inherit;}
+  .ai-in .send{width:44px; height:44px; border-radius:50%; background:var(--accent); color:#fff; border:none; font-size:18px; cursor:pointer; flex:0 0 auto;}
+
+  /* 顶部控制中心（跟随手指下滑，iOS 27 右上角下滑） */
+  .cc{
+    position:absolute; left:0; right:0; top:0; max-height:76%; z-index:66;
+    border-radius:0 0 36px 36px; display:flex; flex-direction:column; gap:13px;
+    padding:18px 18px 26px; transform:translateY(-100%);
+    transition:transform .46s cubic-bezier(.34,1.4,.5,1); touch-action:none;
+  }
+  .cc-grab{height:22px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; cursor:pointer;}
+  .cc-grab i{width:42px; height:5px; border-radius:3px; background:var(--gb);}
+  .cc-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+  .cc-round{display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; touch-action:none;}
+  .cc-ring,.cc-ic{width:62px; height:62px; border-radius:50%; display:grid; place-items:center; background:rgba(var(--gf),.2); border:1px solid var(--gb); box-shadow:inset 0 1px 2px rgba(255,255,255,.6), inset 0 -1px 2px rgba(255,255,255,.2), 0 4px 12px rgba(0,0,0,.2);}
+  .cc-ring{background:conic-gradient(var(--accent) 55%, var(--track) 0);}
+  .cc-ring b{font-size:14px; font-weight:700; color:var(--fg);}
+  .cc-ic{font-size:26px;}
+  .cc-lab{font-size:11px; color:var(--fg);}
+  .cc-round[data-on="1"] .cc-ic{box-shadow:inset 0 0 0 2px var(--accent), 0 4px 12px rgba(0,0,0,.2);}
+  .cc-sliders{display:flex; flex-direction:column; gap:10px;}
+  .cc-slider{display:flex; align-items:center; gap:11px; background:rgba(var(--gf),.16); border:1px solid var(--gb); border-radius:16px; padding:9px 15px; box-shadow:inset 0 1px 1px rgba(255,255,255,.45);}
+  .cc-slider .ic{font-size:15px; width:20px; text-align:center; filter:grayscale(.2);}
+  .cc-slider input[type=range]{flex:1; height:6px; background:rgba(120,130,145,.35);}
+  .cc-slider input[type=range]::-webkit-slider-thumb{width:22px; height:22px;}
+  .cc-tiles{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .cc-tile{display:flex; align-items:center; gap:9px; font-size:13px; color:var(--fg); background:rgba(var(--gf),.16); border:1px solid var(--gb); border-radius:16px; padding:11px 13px; box-shadow:inset 0 1px 1px rgba(255,255,255,.45); cursor:pointer;}
+  .cc-tile .ic{display:grid; place-items:center;}
+  .cc-tile[data-on="1"]{box-shadow:inset 0 0 0 1.5px var(--accent), inset 0 1px 1px rgba(255,255,255,.45);}
+  .cc-row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  .cc-mini{font-size:12px; color:var(--fg); background:rgba(var(--gf),.16); border:1px solid var(--gb); padding:8px 14px; border-radius:14px;}
+  /* 控制中心图标：单色 SVG 符号（比 emoji 更“苹果”且处处渲染一致） */
+  .cc-ic svg{width:26px; height:26px; display:block; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
+  .cc-slider .ic{display:grid; place-items:center; color:var(--fg);}
+  .cc-slider .ic svg{width:16px; height:16px; display:block; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .cc-tile .ic svg{width:19px; height:19px; display:block; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .wbtn .ic svg{width:17px; height:17px; display:block; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+
+  /* 顶部下滑触发区提示（首次可见） */
+  .home a{color:inherit;}
+
+  /* 侧边物理键（原型里可点 = 模拟真实音量/电源键） */
+  .btn-vol,.btn-pw,.btn-vol2{cursor:pointer; transition:transform .12s ease, background .12s ease, box-shadow .12s ease; will-change:transform;}
+  .btn-vol:hover,.btn-pw:hover,.btn-vol2:hover{background:#3a4658; box-shadow:0 0 8px rgba(125,211,252,.6);}
+  .btn-vol:active,.btn-pw:active,.btn-vol2:active{transform:scaleY(.86); background:#5eead4;}
+  /* 音量+ 键高亮提示环（提示"可按键"） */
+  .btn-vol::after{content:""; position:absolute; right:1px; top:-4px; width:7px; height:70px; border-radius:4px;
+    background:linear-gradient(180deg, rgba(125,211,252,.0), rgba(125,211,252,.55), rgba(125,211,252,0));
+    animation:keyPulse 2.4s ease-in-out infinite; pointer-events:none;}
+  @keyframes keyPulse{0%,100%{opacity:.25}50%{opacity:.9}}
+
+  /* 控制中心“小组件”玻璃胶囊按钮（GlassButtonStyle 风格） */
+  .cc-round:active,.cc-tile:active,.wbtn:active{transform:scale(.95);}
+  .cc-widgets{display:flex; flex-direction:column; gap:8px;}
+  .cc-wlab{font-size:11px; color:var(--muted); padding-left:2px; letter-spacing:.5px;}
+  .wbtns{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .wbtn{
+    font-size:14px; font-weight:500; color:var(--fg); background:rgba(var(--gf),.18);
+    border:1px solid var(--gb); border-radius:16px; padding:13px 10px; cursor:pointer;
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.5), 0 4px 10px rgba(0,0,0,.15);
+    -webkit-backdrop-filter:blur(6px) saturate(160%); backdrop-filter:blur(6px) saturate(160%);
+    transition:transform .12s ease, box-shadow .12s ease; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .wbtn:active{box-shadow:inset 0 2px 5px rgba(0,0,0,.18);}
+  .wbtn .ic{font-size:16px;}
+  /* 键盘提示气泡 */
+  .kbd-tip{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(.9); z-index:80;
+    background:rgba(var(--gf),.92); color:var(--fg); border:1px solid var(--gb); border-radius:16px;
+    padding:14px 18px; font-size:13px; line-height:1.7; box-shadow:0 10px 30px rgba(0,0,0,.3);
+    opacity:0; pointer-events:none; transition:.2s; max-width:260px;}
+  .kbd-tip.show{opacity:1; transform:translate(-50%,-50%) scale(1);}
+  .kbd-tip code{background:rgba(0,0,0,.12); border-radius:6px; padding:1px 6px; font-family:var(--mono);}
+
+  /* 手势浮层 */
+  .hint{position:absolute; left:50%; transform:translateX(-50%); bottom:104px; z-index:72; font-size:12.5px; color:var(--fg); padding:9px 16px; border-radius:20px; opacity:0; transition:.25s; pointer-events:none; white-space:nowrap;}
+  .hint.show{opacity:1;}
+
+  /* ===== 主题变量 ===== */
+  html{ --gsh:0 10px 34px rgba(0,0,0,.24); --gsp:rgba(255,255,255,.75); --gsheen:.42; --track:rgba(255,255,255,.20); }
+  html[data-theme="a"]{ /* A 白简约（默认）—— 纯白基调，像苹果原生 */
+    --wall:linear-gradient(180deg,#ffffff 0%,#fbfcfe 52%,#eef3f9 100%);
+    --blob1:rgba(122,168,255,.42); --blob2:rgba(180,158,255,.28); --blob3:rgba(94,214,196,.24);
+    --gf:255,255,255; --ga:.60; --gb:rgba(15,23,42,.10); --blur:30px;
+    --fg:#0a0c10; --muted:#5c6b7e; --accent:#007aff; --accent2:#34c759;
+    --hair:rgba(15,23,42,.09); --sb:#0a0c10; --home:#0a0c10; --pick:#007aff;
+    --term-fg:#0e1c28; --term-cmd:#007aff; --mono:"SF Mono","SFMono-Regular","JetBrains Mono","Menlo","DejaVu Sans Mono",monospace;
+    --gsh:0 5px 20px rgba(15,23,42,.10), 0 1px 2px rgba(15,23,42,.06);
+    --gsp:rgba(255,255,255,.95); --gsheen:.26; --track:rgba(15,23,42,.12);
+    --bub:rgba(118,140,172,.15); --msg-bd:rgba(15,23,42,.05);
+    --code-bg:rgba(15,23,42,.06); --code-fg:#0057c2; --field:rgba(118,140,172,.14);
+  }
+  html[data-theme="b"]{ /* B 暗夜深空 */
+    --wall:radial-gradient(120% 90% at 20% 0%,#1b2540,#0a0e18 60%);
+    --blob1:rgba(56,189,248,.45); --blob2:rgba(168,85,247,.40); --blob3:rgba(244,114,182,.25);
+    --gf:255,255,255; --ga:.30; --gb:rgba(255,255,255,.22); --blur:36px;
+    --fg:#f3f6fb; --muted:#9fb0c6; --accent:#5eead4; --accent2:#818cf8;
+    --hair:rgba(255,255,255,.10); --sb:#f3f6fb; --home:#f3f6fb; --pick:#5eead4;
+    --term-fg:#e6f7f4; --term-cmd:#5eead4; --mono:"SF Mono","JetBrains Mono","Menlo","DejaVu Sans Mono",monospace;
+  }
+  html[data-theme="c"]{ /* C 钛金橙 */
+    --wall:linear-gradient(160deg,#2a2118,#1a1410 60%,#241a12);
+    --blob1:rgba(251,146,60,.40); --blob2:rgba(244,63,94,.30); --blob3:rgba(250,204,21,.22);
+    --gf:255,245,235; --ga:.34; --gb:rgba(255,255,255,.26); --blur:35px;
+    --fg:#fff4ea; --muted:#d6b89e; --accent:#fb923c; --accent2:#f43f5e;
+    --hair:rgba(255,255,255,.10); --sb:#fff4ea; --home:#fff4ea; --pick:#fb923c;
+    --term-fg:#fff1e6; --term-cmd:#fb923c; --mono:"SF Mono","JetBrains Mono","Menlo","DejaVu Sans Mono",monospace;
+  }
+  html[data-theme="d"]{ /* D 石墨半透（默认，最透） */
+    --wall:linear-gradient(160deg,#1d2330,#11151d 60%,#0c0f15);
+    --blob1:rgba(94,234,212,.34); --blob2:rgba(129,140,248,.30); --blob3:rgba(251,191,36,.18);
+    --gf:255,255,255; --ga:.32; --gb:rgba(255,255,255,.20); --blur:34px;
+    --fg:#eef2f8; --muted:#9aa8bc; --accent:#7dd3fc; --accent2:#a5b4fc;
+    --hair:rgba(255,255,255,.09); --sb:#eef2f8; --home:#eef2f8; --pick:#7dd3fc;
+    --term-fg:#dbe7f0; --term-cmd:#7dd3fc; --mono:"SF Mono","JetBrains Mono","Menlo","DejaVu Sans Mono",monospace;
+  }
+  html[data-theme="e"]{ /* E 极光紫 */
+    --wall:linear-gradient(160deg,#1a1430,#120e22 60%,#0e0a1a);
+    --blob1:rgba(168,85,247,.42); --blob2:rgba(56,189,248,.34); --blob3:rgba(236,72,153,.24);
+    --gf:255,255,255; --ga:.30; --gb:rgba(255,255,255,.22); --blur:36px;
+    --fg:#f5eefb; --muted:#bca9d6; --accent:#c084fc; --accent2:#60a5fa;
+    --hair:rgba(255,255,255,.10); --sb:#f5eefb; --home:#f5eefb; --pick:#c084fc;
+    --term-fg:#efe6fb; --term-cmd:#c084fc; --mono:"SF Mono","JetBrains Mono","Menlo","DejaVu Sans Mono",monospace;
+  }
+  /* 降低透明度偏好：退回到更实的玻璃 */
+  @media (prefers-reduced-transparency:reduce){
+    .glass{ --ga:.55 !important; }
+    .screen::after{ display:none; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{ transition-duration:.01ms !important; }
+  }
+</style>
+</head>
+<body>
+  <!-- 左侧调色板 -->
+  <aside class="palette">
+    <h1>moxsh · Liquid Glass</h1>
+    <p class="sub">iOS 27 风格忠实复刻 · 五套玻璃材质实时可点 · 全部手势跟手</p>
+    <h2>玻璃材质 / 主题</h2>
+    <div class="styles">
+      <button class="style-btn active" data-pick="a"><span class="k">A</span><span class="n">白简约（默认）</span></button>
+      <button class="style-btn" data-pick="b"><span class="k">B</span><span class="n">暗夜深空</span></button>
+      <button class="style-btn" data-pick="c"><span class="k">C</span><span class="n">钛金橙</span></button>
+      <button class="style-btn" data-pick="d"><span class="k">D</span><span class="n">石墨半透</span></button>
+      <button class="style-btn" data-pick="e"><span class="k">E</span><span class="n">极光紫</span></button>
+    </div>
+    <div class="legend">
+      <b>手势（全跟手）：</b><br>
+      · 顶部下滑 → 控制中心<br>
+      · 终端上滑 → AI 助手<br>
+      · 终端左右滑 / 连点三下 → 切会话<br>
+      · 右侧<b>音量+ 键</b> → 开控制中心（模拟物理键）<br>
+      <b>键盘快捷键：</b><br>
+      · <code>V</code> 音量+ · <code>U</code> AI · <code>1/2/3</code> 切页 · <code>Esc</code> 收起<br>
+      · 终端输入 <code>help</code> 试命令
+    </div>
+    <p class="note">原型仅用于 UI 体验验证；真实终端需在 Kotlin Compose 实现。<br>参考 <a href="https://moxsh.dev" target="_blank">moxsh.dev</a></p>
+  </aside>
+
+  <!-- 手机舞台 -->
+  <div class="stage">
+    <div class="phone" id="phone">
+      <div class="btn-vol" id="btn-vol" title="音量+ 键（点我=模拟物理键）"></div><div class="btn-pw" id="btn-pw" title="电源键"></div><div class="btn-vol2" id="btn-vol2" title="音量− 键"></div>
+      <div class="screen" id="screen">
+        <div class="island"><span class="cam"></span></div>
+        <div class="statusbar">
+          <span id="clock">9:41</span>
+          <span class="right">
+            <svg viewBox="0 0 26 13" fill="currentColor"><rect x="0" y="1.5" width="21" height="10" rx="3"/><rect x="2" y="3.5" width="15" height="6" rx="1.5" fill="#0e1116"/><rect x="23" y="4" width="2.5" height="5" rx="1"/></svg>
+            <svg viewBox="0 0 26 13" fill="currentColor"><path d="M13 2l2.2 4.6L20 7l-3.5 3.4L17.4 13 13 10.6 8.6 13l.9-2.6L6 7l4.8-.4z"/></svg>
+            <svg viewBox="0 0 26 13" fill="currentColor"><rect x="1" y="3" width="22" height="8" rx="2.5"/><rect x="3" y="5" width="16" height="4" rx="1" fill="#0e1116"/><circle cx="21" cy="7" r="1.6" fill="#0e1116"/></svg>
+          </span>
+        </div>
+
+        <!-- 视图：终端（会话收进工具栏） -->
+        <section class="view on" id="v-terminal">
+          <div class="htitle">终端</div>
+          <div class="toolbar glass">终端</div>
+          <div class="term-wrap glass">
+            <div class="term-bar">
+              <span class="sess-btn" id="sessBtn">≡ 会话</span>
+              <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+              <span style="margin-left:6px;flex:1" id="term-sess">主会话 · localhost</span>
+            </div>
+            <div class="term-body" id="term-out"></div>
+            <div class="term-input">
+              <span class="ps" id="term-ps">mox $</span>
+              <input id="term-in" autocomplete="off" spellcheck="false" placeholder="输入命令…" />
+            </div>
+          </div>
+        </section>
+
+        <!-- 视图：分类（插件市场 + 一堆分类） -->
+        <section class="view" id="v-categories">
+          <div class="htitle">分类</div>
+          <div class="toolbar glass">分类</div>
+          <div class="scroll">
+            <div class="cat-search glass"><input id="catSearch" placeholder="搜索分类…" autocomplete="off" /><svg viewBox="0 0 24 24" width="18" height="18" style="stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></div>
+            <div class="cat-grid" id="cat-grid"></div>
+            <div class="card glass" style="margin-top:12px"><h3>不止市场</h3><p>插件市场只是其中一类。这里聚合 App 全部能力：主题、键盘、字体、自动化、系统、外观、网络……以后都会长进来。</p></div>
+          </div>
+        </section>
+
+        <!-- 视图：设置 -->
+        <section class="view" id="v-settings">
+          <div class="htitle">设置</div>
+          <div class="toolbar glass">设置</div>
+          <div class="scroll">
+            <div class="slider-wrap glass">
+              <div class="top"><span class="t">液态玻璃通透度</span><span class="v" id="glass-val">默认</span></div>
+              <input type="range" id="glass-slider" min="0" max="100" value="45" />
+              <div class="scale-tags"><span>极清澈</span><span>默认</span><span>浓染</span></div>
+            </div>
+            <div id="resetGlass" class="reset-pill">重置通透度</div>
+            <div class="card glass"><h3>外观</h3><p>仿 iOS 27「设置 → 外观 → Liquid Glass」滑块，实时调节全局玻璃材质。顶部控制中心也可调。</p></div>
+            <div class="card glass" style="padding:0">
+              <div class="row"><span class="lab">自动切换浅/深色</span><span class="toggle on" data-tg></span></div>
+              <div class="row"><span class="lab">增强对比度</span><span class="toggle" data-tg></span></div>
+              <div class="row"><span class="lab">降低透明度</span><span class="toggle" data-tg></span></div>
+              <div class="row"><span class="lab">减少动态效果</span><span class="toggle" data-tg></span></div>
+            </div>
+            <div class="card glass" style="padding:0">
+              <div class="row"><span class="lab">终端字体</span><span class="val">SF Mono</span></div>
+              <div class="row"><span class="lab">主题强调色</span><span class="val" id="acc-val">#007AFF</span></div>
+              <div class="row"><span class="lab">关于 moxsh</span><span class="val">v0.9 · 终端模拟器</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 会话抽屉 -->
+        <div class="sess-sheet glass" id="sessSheet">
+          <div class="ss-head"><span>会话</span><span class="ss-x" id="ssClose">✕</span></div>
+          <div class="scroll" id="ss-list"></div>
+        </div>
+
+        <!-- 顶部控制中心 -->
+        <div class="cc glass" id="cc">
+          <div class="cc-grab"><i></i></div>
+          <div class="cc-grid">
+            <div class="cc-round" id="ccTrans"><div class="cc-ring"><b id="ccTransV">55%</b></div><span class="cc-lab">透明度</span></div>
+            <div class="cc-round" id="ccTheme"><div class="cc-ic"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></div><span class="cc-lab">主题</span></div>
+            <div class="cc-round" id="ccMarket"><div class="cc-ic"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><path d="M16.5 13v7M13 16.5h7"/></svg></div><span class="cc-lab">插件</span></div>
+            <div class="cc-round" id="ccConn" data-on="1"><div class="cc-ic"><svg viewBox="0 0 24 24"><path d="M4.5 11a11 11 0 0 1 15 0"/><path d="M8 14.5a6.5 6.5 0 0 1 8 0"/><circle cx="12" cy="18.3" r="1.3" fill="currentColor" stroke="none"/></svg></div><span class="cc-lab">连接</span></div>
+          </div>
+          <div class="cc-row">
+            <div class="cc-mini">专注</div><div class="cc-mini">勿扰</div><div class="cc-mini">低电量</div>
+          </div>
+          <div class="cc-sliders">
+            <div class="cc-slider"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/></svg></span><input type="range" min="0" max="100" value="72" aria-label="亮度"></div>
+            <div class="cc-slider"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 9v6h3.5L12 19V5L7.5 9H4z"/><path d="M16 9.5a3.5 3.5 0 0 1 0 5M18.5 7a7 7 0 0 1 0 10"/></svg></span><input type="range" min="0" max="100" value="48" aria-label="音量"></div>
+          </div>
+          <div class="cc-tiles">
+            <div class="cc-tile" data-on="1"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4.5 10a11 11 0 0 1 15 0"/><path d="M8 13.5a6.5 6.5 0 0 1 8 0"/><circle cx="12" cy="17.3" r="1.3" fill="currentColor" stroke="none"/></svg></span><span>无线局域网</span></div>
+            <div class="cc-tile" data-on="1"><span class="ic"><svg viewBox="0 0 24 24"><path d="M7 7l10 10-5 3V4l5 3L7 17"/></svg></span><span>蓝牙</span></div>
+            <div class="cc-tile"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 0 1 14 0"/><path d="M8.5 12a3.5 3.5 0 0 1 7 0"/><circle cx="12" cy="16.5" r="1.4" fill="currentColor" stroke="none"/></svg></span><span>隔空投送</span></div>
+            <div class="cc-tile"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 5v9"/><path d="M6.5 9a8 8 0 0 0 0 6.5"/><path d="M17.5 9a8 8 0 0 1 0 6.5"/><circle cx="12" cy="17.5" r="1.4" fill="currentColor" stroke="none"/></svg></span><span>个人热点</span></div>
+          </div>
+          <!-- 小组件：可按键操作的快捷动作 -->
+          <div class="cc-widgets">
+            <span class="cc-wlab">小组件 · 一键动作</span>
+            <div class="wbtns">
+              <button class="wbtn" data-act="clear"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg></span>清屏</button>
+              <button class="wbtn" data-act="connect"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></svg></span>速连</button>
+              <button class="wbtn" data-act="help"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.2a2.7 2.7 0 1 1 3.7 2.5c-.9.5-1.1 1-1.1 1.8"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg></span>帮助</button>
+              <button class="wbtn" data-act="shot"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="12.5" rx="3"/><circle cx="12" cy="12.7" r="3.4"/><path d="M9 6.5l1.2-2h3.6L15 6.5"/></svg></span>截屏</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI 面板 -->
+        <div class="ai-panel glass" id="ai">
+          <div class="ai-grab"><i></i></div>
+          <div class="ai-head"><div class="t">AI 助手</div><div class="s">描述需求，返回可直接运行的命令</div></div>
+          <div class="ai-log" id="ai-log"></div>
+          <div class="ai-in">
+            <input id="ai-in" placeholder="例如：安装 wget" autocomplete="off" />
+            <button class="send" id="ai-send">↑</button>
+          </div>
+        </div>
+
+        <div class="hint" id="hint"></div>
+        <div class="kbd-tip" id="kbdTip">
+          <b>键盘 / 物理键</b><br>
+          <code>V</code> 音量+ → 控制中心<br>
+          <code>U</code> → AI 助手<br>
+          <code>1</code><code>2</code><code>3</code> → 终端/分类/设置<br>
+          <code>Esc</code> → 收起面板<br>
+          <span style="color:var(--muted)">手机右侧音量+ 键亦可（原型可点）</span>
+        </div>
+        <div class="home"></div>
+
+        <!-- 悬浮玻璃胶囊三键 -->
+        <nav class="tabbar glass" id="tabbar">
+          <div class="tab active" data-view="v-terminal"><span class="ti"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3M13 15h4"/></svg></span><span class="tx">终端</span></div>
+          <div class="tab" data-view="v-categories"><span class="ti"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span><span class="tx">分类</span></div>
+          <div class="tab" data-view="v-settings"><span class="ti"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span><span class="tx">设置</span></div>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <!-- 折射滤镜（Liquid Glass 灵魂，缩放被 @supports 限制） -->
+  <svg class="svg-defs" aria-hidden="true" width="0" height="0" style="position:absolute"><defs>
+    <filter id="glassRefr" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.009" numOctaves="2" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs></svg>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+
+  /* ---- 1. 主题切换 ---- */
+  const themes=['a','b','c','d','e'];
+  function applyTheme(th){
+    document.documentElement.setAttribute('data-theme', th);
+    $$('.style-btn').forEach(x=>x.classList.toggle('active', x.dataset.pick===th));
+    $('#acc-val').textContent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  }
+  $$('.style-btn[data-pick]').forEach(b=>b.addEventListener('click',()=>applyTheme(b.dataset.pick)));
+
+  /* ---- 2. 适配高度（真机比例缩放） ---- */
+  function fit(){
+    const phone=$('#phone'), stage=$('.stage');
+    const avail=stage.clientHeight-36, ph=phone.offsetHeight;
+    const s=Math.min(1, avail/ph);
+    phone.style.transform='scale('+s+')';
+  }
+  window.addEventListener('resize',fit); fit();
+
+  /* ---- 3. 状态栏时钟 ---- */
+  function tick(){ const d=new Date(); let h=d.getHours(),m=d.getMinutes();
+    $('#clock').textContent=h+':'+(m<10?'0':'')+m; }
+  tick(); setInterval(tick,15000);
+
+  /* ---- 4. 三键切换视图（终端 / 分类 / 设置） ---- */
+  function showView(id){
+    $$('.view').forEach(v=>v.classList.toggle('on', v.id===id));
+    $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===id));
+  }
+  $$('.tab').forEach(t=>t.addEventListener('click',()=>showView(t.dataset.view)));
+
+  /* ---- 5. 会话状态（收进终端，简单） ---- */
+  const sessions=[
+    {name:'主会话', host:'localhost'},
+    {name:'构建',  host:'localhost'},
+    {name:'远程',  host:'10.0.0.5'},
+  ];
+  let cur=0;
+  const seed={
+    0:[ {t:'moxsh  v0.9  ·  zsh 5.9  ·  arm64', c:'muted'},
+        {t:'──────────────────────────────', c:'dim'},
+        {t:'mox 主会话 $ ls', c:'cmd'},
+        {t:'Desktop   Downloads   projects', c:''},
+        {t:'.zshrc    moxsh   notes.md', c:''},
+        {t:'mox 主会话 $ neofetch', c:'cmd'},
+        {t:'  OS      iOS 27 · moxsh 0.9', c:''},
+        {t:'  Shell   zsh 5.9 · arm64', c:''},
+        {t:'  Theme   白简约 · Liquid Glass', c:''},
+        {t:'  Uptime  12m 40s', c:''},
+        {t:'mox 主会话 $ git status', c:'cmd'},
+        {t:'  On branch main', c:''},
+        {t:'  nothing to commit, clean', c:'muted'} ],
+    1:[ {t:'moxsh  v0.9  ·  zsh 5.9', c:'muted'},
+        {t:'──────────────────────────────', c:'dim'},
+        {t:'mox 构建 $ ./gradlew assemble', c:'cmd'},
+        {t:'> Task :app:compileKotlin', c:'muted'},
+        {t:'> Task :app:packageDebug', c:'muted'},
+        {t:'BUILD SUCCESSFUL in 24s', c:''} ],
+    2:[ {t:'moxsh  v0.9  ·  ssh 10.0.0.5', c:'muted'},
+        {t:'──────────────────────────────', c:'dim'},
+        {t:'mox 远程 $ uptime', c:'cmd'},
+        {t:' 21:08  up 6 days,  3 users', c:''},
+        {t:' load average: 0.42', c:''} ],
+  };
+  sessions.forEach((s,i)=>{ s.lines=(seed[i]||[]).slice(); });
+
+  const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  function renderTerm(){
+    const out=$('#term-out'); out.innerHTML='';
+    sessions[cur].lines.forEach(l=>{
+      const d=document.createElement('div');
+      d.className='term-line'+(l.c?' '+l.c:'');
+      if(l.c==='cmd'){
+        const i=l.t.indexOf(' $ ');
+        d.innerHTML='<span class="ps">'+esc(l.t.slice(0,i+3))+'</span><span class="cd">'+esc(l.t.slice(i+3))+'</span>';
+      } else { d.textContent=l.t; }
+      out.appendChild(d);
+    });
+    out.scrollTop=out.scrollHeight;
+    $('#term-sess').textContent=sessions[cur].name+' · '+sessions[cur].host;
+    $('#term-ps').textContent='mox '+sessions[cur].name+' $';
+  }
+  function print(t,c){ sessions[cur].lines.push({t,c}); renderTerm(); }
+  function setSession(i){ cur=(i+sessions.length)%sessions.length; renderTerm(); renderSessInto('#ss-list'); flash('会话 → '+sessions[cur].name); }
+
+  function renderSessInto(sel){
+    const box=$(sel); if(!box) return; box.innerHTML='';
+    sessions.forEach((s,i)=>{
+      const el=document.createElement('div');
+      el.className='sess glass'+(i===cur?' cur':'');
+      el.innerHTML='<div class="ava">'+(i===0?'🖥':i===1?'🔧':'🌐')+'</div>'+
+        '<div class="meta"><div class="nm">'+s.name+'</div><div class="ho">mox@'+s.host+'</div></div>'+
+        (i===cur?'<span class="badge">当前</span>':'');
+      el.addEventListener('click',()=>{ setSession(i); closeSheet(); });
+      box.appendChild(el);
+    });
+  }
+  function openSheet(){ $('#sessSheet').classList.add('open'); }
+  function closeSheet(){ $('#sessSheet').classList.remove('open'); }
+  $('#sessBtn').addEventListener('click', e=>{ e.stopPropagation(); $('#sessSheet').classList.toggle('open'); });
+  $('#ssClose').addEventListener('click', closeSheet);
+  renderTerm(); renderSessInto('#ss-list');
+
+  /* ---- 6. 终端命令 ---- */
+  function run(raw){
+    const cmd=raw.trim(); if(!cmd) return;
+    print('mox '+sessions[cur].name+' $ '+cmd,'cmd');
+    const [c,...a]=cmd.split(/\s+/);
+    switch(c){
+      case 'help': print('可用: help ls whoami pwd date echo clear neofetch'); break;
+      case 'ls': print('Desktop  Downloads  projects  .bashrc  moxsh'); break;
+      case 'whoami': print('mox'); break;
+      case 'pwd': print('/data/data/com.moxsh/files/home'); break;
+      case 'date': print(new Date().toString()); break;
+      case 'echo': print(a.join(' ')); break;
+      case 'neofetch': print('moxsh  v0.9   ⌁ Liquid Glass terminal'); break;
+      case 'clear': sessions[cur].lines=[]; renderTerm(); return;
+      default: print('command not found: '+c,'err');
+    }
+  }
+  $('#term-in').addEventListener('keydown',e=>{
+    if(e.key==='Enter'){ run(e.target.value); e.target.value=''; }
+  });
+
+  /* ---- 7. 提示气泡 ---- */
+  function flash(msg){ const h=$('#hint'); h.textContent=msg; h.classList.add('show'); clearTimeout(flash._t); flash._t=setTimeout(()=>h.classList.remove('show'),1100); }
+
+  /* ---- 8. 统一跟手手势系统 ---- */
+  const screen=$('#screen');
+  const termWrap=document.querySelector('.term-wrap');
+  let ccOpen=false, g=null, taps=[];
+  const SPRING='cubic-bezier(.34,1.45,.5,1)';
+
+  function openCC(){ ccOpen=true; const c=$('#cc'); c.style.transition='transform .46s '+SPRING; c.style.transform='translateY(0)'; }
+  function closeCC(){ ccOpen=false; const c=$('#cc'); c.style.transition='transform .4s cubic-bezier(.34,1.3,.5,1)'; c.style.transform='translateY(-100%)'; }
+  function openAI(){ const p=$('#ai'); if(!p.dataset.seed){ seedAI(); p.dataset.seed=1; } p.classList.add('open'); p.style.transition='transform .46s '+SPRING; p.style.transform='translateY(0)'; }
+  function closeAI(){ const p=$('#ai'); p.classList.remove('open'); p.style.transition='transform .4s cubic-bezier(.34,1.3,.5,1)'; p.style.transform='translateY(100%)'; }
+
+  function onScreenDown(e){
+    if(e.target.closest('.term-wrap')) return;   // 终端自己处理
+    if(e.target.closest('#cc')) return;           // 控制中心自己处理
+    if(e.target.closest('#ai')) return;           // AI 自己处理
+    const r=screen.getBoundingClientRect();
+    if(e.clientY - r.top < r.height*0.11 && !ccOpen){   // 顶部下滑 → 控制中心
+      g={type:'cc-open', startX:e.clientX, startY:e.clientY};
+      $('#cc').style.transition='none';
+    }
+  }
+  function onCCDown(e){
+    if(e.target.closest('#ccTrans, input, .cc-tile, .cc-slider')) return; // 交互控件不触发收起
+    const r=$('#cc').getBoundingClientRect();
+    if(e.clientY - r.top < r.height*0.30){              // 顶栏下滑 → 收起
+      g={type:'cc-dismiss', startX:e.clientX, startY:e.clientY};
+      $('#cc').style.transition='none';
+    }
+  }
+  function onTermDown(e){
+    if(e.target.closest('#sessBtn')) return;            // 会话按钮
+    if(e.target.closest('input')) return;               // 输入
+    g={type:'term', startX:e.clientX, startY:e.clientY, lock:null, t0:Date.now()};
+    termWrap.style.transition='none';
+  }
+  function onAIDown(e){
+    if(!$('#ai').classList.contains('open')) return;
+    if(e.target.closest('input,button,.run')) return;
+    const r=$('#ai').getBoundingClientRect();
+    if(e.clientY - r.top < r.height*0.22){              // 顶栏下滑 → 收起
+      g={type:'ai-dismiss', startX:e.clientX, startY:e.clientY};
+      $('#ai').style.transition='none';
+    }
+  }
+  screen.addEventListener('pointerdown', onScreenDown);
+  $('#cc').addEventListener('pointerdown', onCCDown);
+  termWrap.addEventListener('pointerdown', onTermDown);
+  $('#ai').addEventListener('pointerdown', onAIDown);
+
+  function onMove(e){
+    if(!g) return;
+    const dx=e.clientX-g.startX, dy=e.clientY-g.startY;
+    if(g.type==='cc-open'){
+      const H=$('#cc').offsetHeight;
+      $('#cc').style.transform='translateY('+Math.max(-H,-H+dy)+'px)';   // 跟手下滑
+    } else if(g.type==='cc-dismiss'){
+      $('#cc').style.transform='translateY('+Math.max(0,dy)+'px)';       // 跟手下滑收起
+    } else if(g.type==='ai-dismiss'){
+      const H=$('#ai').offsetHeight;
+      $('#ai').style.transform='translateY('+Math.max(0,H+dy)+'px)';     // 跟手下滑收起
+    } else if(g.type==='term'){
+      if(!g.lock && (Math.abs(dx)>8||Math.abs(dy)>8)){
+        if(Math.abs(dy)>Math.abs(dx) && dy<0) g.lock='ai';        // 上滑 → AI
+        else if(Math.abs(dx)>Math.abs(dy)) g.lock='swipe';        // 横滑 → 切会话
+        else g.lock='v';
+      }
+      if(g.lock==='ai'){
+        const H=$('#ai').offsetHeight;
+        $('#ai').style.transition='none';
+        $('#ai').style.transform='translateY('+Math.min(H,H+dy)+'px)'; // 跟手上滑
+      } else if(g.lock==='swipe'){
+        // 跟手横滑（带阻尼），松手回弹并切会话
+        termWrap.style.transform='translateX('+Math.max(-64,Math.min(64,dx*0.5))+'px)';
+      }
+    } else if(g.type==='cc-ring'){
+      const v=Math.min(100,Math.max(0, g.p - dy*0.6));
+      setGlass(100-v); g.p=v;
+    }
+  }
+  function onUp(e){
+    if(!g) return;
+    const dx=e.clientX-g.startX, dy=e.clientY-g.startY;
+    if(g.type==='cc-open'){
+      const H=$('#cc').offsetHeight; if(dy>H*0.30) openCC(); else closeCC();
+    } else if(g.type==='cc-dismiss'){
+      const H=$('#cc').offsetHeight; if(dy>H*0.30) closeCC(); else openCC();
+    } else if(g.type==='ai-dismiss'){
+      const H=$('#ai').offsetHeight; if(dy>H*0.30) closeAI(); else openAI();
+    } else if(g.type==='term'){
+      if(g.lock==='ai'){
+        const H=$('#ai').offsetHeight; if(dy < -H*0.22) openAI(); else closeAI();
+      } else if(g.lock==='swipe'){
+        if(Math.abs(dx)>46) setSession(cur + (dx<0?1:-1));
+        termWrap.style.transition='transform .42s '+SPRING;
+        termWrap.style.transform='translateX(0)';
+        setTimeout(()=>{ termWrap.style.transition=''; },440);
+      } else {                                            // 轻点累计 → 三下切会话
+        const now=Date.now(); taps=taps.filter(x=>now-x<500); taps.push(now);
+        if(taps.length>=3){ taps=[]; setSession(cur+1); }
+      }
+    }
+    g=null;
+  }
+  window.addEventListener('pointermove', e=>{
+    // 跟随手指的高光
+    const r=screen.getBoundingClientRect();
+    const mx=((e.clientX-r.left)/r.width*100).toFixed(1);
+    const my=((e.clientY-r.top)/r.height*100).toFixed(1);
+    screen.style.setProperty('--mx', mx+'%');
+    screen.style.setProperty('--my', my+'%');
+    onMove(e);
+  });
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', ()=>{ g=null; });
+
+  // 控制中心透明度环（上下拖，跟手调节，松手留住）
+  $('#ccTrans').addEventListener('pointerdown', e=>{ e.stopPropagation(); g={type:'cc-ring', startY:e.clientY, p:ccTransP}; $('#cc').style.transition='none'; });
+
+  /* ---- 9. 控制中心控件 ---- */
+  let ccThemeIdx=0;
+  $('#ccTheme').addEventListener('click',()=>{ ccThemeIdx=(ccThemeIdx+1)%themes.length; applyTheme(themes[ccThemeIdx]); flash('主题 → '+themes[ccThemeIdx].toUpperCase()); });
+  $('#ccMarket').addEventListener('click',()=>{ closeCC(); showView('v-categories'); flash('打开分类 · 插件市场'); });
+  $('#ccConn').addEventListener('click',()=>{ const el=$('#ccConn'); const on=el.dataset.on==='1'; el.dataset.on=on?'0':'1'; flash(on?'连接已断开':'已连接'); });
+  $$('.cc-tile').forEach(t=>t.addEventListener('click',()=>{ const on=t.dataset.on==='1'; t.dataset.on=on?'0':'1'; flash((on?'关闭':'开启')+'：'+t.textContent.trim()); }));
+
+  /* ---- 9b. 小组件：可按键的一键动作 ---- */
+  $$('.wbtn').forEach(b=>b.addEventListener('click',()=>{
+    const a=b.dataset.act;
+    if(a==='clear'){ run('clear'); flash('小组件 · 清屏'); closeCC(); showView('v-terminal'); }
+    else if(a==='connect'){ print('⚡ 正在连接默认会话…','muted'); flash('小组件 · 速连（演示）'); }
+    else if(a==='help'){ run('help'); flash('小组件 · 帮助'); closeCC(); showView('v-terminal'); }
+    else if(a==='shot'){ flash('小组件 · 截屏（演示）'); }
+  }));
+
+  /* ---- 9c. 物理键（原型里点击侧边键模拟） + 键盘快捷键 ---- */
+  // 右侧音量+ 键 → 打开控制中心（真实 App 用 KeyEvent.KEYCODE_VOLUME_UP 拦截）
+  $('#btn-vol').addEventListener('click',()=>{ flash('音量+ 键（物理键映射）→ 控制中心'); openCC(); });
+  $('#btn-pw').addEventListener('click',()=>{ flash('电源键 → 锁屏（演示）'); });
+  $('#btn-vol2').addEventListener('click',()=>{ flash('音量− 键 → 收起面板'); closeCC(); closeAI(); });
+  window.addEventListener('keydown',e=>{
+    if(e.target.matches('input,textarea')) return;
+    const k=e.key.toLowerCase();
+    if(k==='v'||k==='='){ flash('音量+ → 控制中心'); openCC(); }
+    else if(k==='-'||k==='_'){ closeCC(); closeAI(); }
+    else if(k==='u'){ openAI(); }
+    else if(k==='1'){ showView('v-terminal'); }
+    else if(k==='2'){ showView('v-categories'); }
+    else if(k==='3'){ showView('v-settings'); }
+    else if(k==='escape'){ closeCC(); closeAI(); closeSheet(); $('#kbdTip').classList.remove('show'); }
+    else if(k==='?'){ const t=$('#kbdTip'); t.classList.toggle('show'); }
+  });
+
+  /* ---- 10. AI 面板 ---- */
+  function seedAI(){
+    $('#ai-log').innerHTML='<div class="msg a">你好，我是 moxsh AI。描述你想做的事，我返回可直接运行的命令。<div class="run" data-c="pkg update">示例：更新包索引 → 运行</div></div>';
+    bindRuns();
+  }
+  function bindRuns(){ $$('#ai-log .run').forEach(r=>r.onclick=()=>{ run(r.dataset.c); flash('已插入终端：'+r.dataset.c); closeAI(); showView('v-terminal'); }); }
+  function aiReply(q){
+    const log=$('#ai-log');
+    log.insertAdjacentHTML('beforeend','<div class="msg u">'+q+'</div>');
+    let ans,cmd;
+    if(/安装|install|装/.test(q)){ ans='建议用包管理器安装：'; cmd='pkg install '+(q.replace(/.*安装|install|装/g,'')||'wget').trim(); }
+    else if(/网络|net|ip|连/.test(q)){ ans='查看网络与 IP：'; cmd='ip addr show && curl ifconfig.me'; }
+    else if(/文件|file|列|ls/.test(q)){ ans='列出当前目录：'; cmd='ls -la'; }
+    else if(/更新|update|升级/.test(q)){ ans='更新包索引：'; cmd='pkg update'; }
+    else { ans='已为你生成命令（示例）：'; cmd='echo "把需求说清楚，我给更准的命令"'; }
+    log.insertAdjacentHTML('beforeend','<div class="msg a">'+ans+'<code>$ '+cmd+'</code><div class="run" data-c="'+cmd.replace(/"/g,'&quot;')+'">插入终端并运行 →</div></div>');
+    bindRuns(); log.scrollTop=log.scrollHeight;
+  }
+  function sendAI(){ const v=$('#ai-in').value.trim(); if(!v) return; aiReply(v); $('#ai-in').value=''; }
+  $('.ai-grab').addEventListener('click', closeAI);
+  $('#ai-send').addEventListener('click', sendAI);
+  $('#ai-in').addEventListener('keydown', e=>{ if(e.key==='Enter') sendAI(); });
+
+  /* ---- 11. iOS 27 通透度（滑块 + 控制中心环同步） ---- */
+  let ccTransP=55;
+  function setGlass(v){
+    v=Math.max(0,Math.min(100,v));
+    const a=(0.34 + (v/100)*0.46).toFixed(3);             // 0=极清澈(.34) 100=浓染(.80)，白底上才有"实体感"
+    document.documentElement.style.setProperty('--ga', a);
+    $('#glass-val').textContent = v<22?'极清澈':v>78?'浓染':'默认';
+    $('#glass-slider').value=Math.round(v);
+    ccTransP=100-v;
+    $('#ccTransV').textContent=Math.round(ccTransP)+'%';
+    $('#ccTrans .cc-ring').style.background='conic-gradient(var(--accent) '+(ccTransP*3.6)+'deg, var(--track) 0)';
+  }
+  $('#glass-slider').addEventListener('input', e=>setGlass(+e.target.value));
+  setGlass(+$('#glass-slider').value);
+  const resetEl=$('#resetGlass'); if(resetEl) resetEl.addEventListener('click',()=>{ setGlass(45); flash('已重置通透度'); });
+
+  /* ---- 12. 分类页（插件市场 + 一堆分类） ---- */
+  const I = p => '<svg viewBox="0 0 24 24">' + p + '</svg>';
+  const cats=[
+    {ic:I('<rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><path d="M16.5 13v7M13 16.5h7"/>'), nm:'插件市场', ds:'扩展与脚本上架', feat:true},
+    {ic:I('<path d="M12 3a9 9 0 0 0 0 18c1 0 1.8-.8 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8H16a5 5 0 0 0 5-5c0-4.4-4-7.9-9-7.9z"/><circle cx="8" cy="11" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="11" r="1" fill="currentColor" stroke="none"/>'), nm:'终端主题', ds:'配色与玻璃'},
+    {ic:I('<rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>'), nm:'键盘与手势', ds:'快捷与映射'},
+    {ic:I('<path d="M6 19L12 5l6 14"/><path d="M9 13h6"/>'), nm:'字体', ds:'等宽字体库'},
+    {ic:I('<path d="M4 12a8 8 0 0 1 13.5-5.5L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.5 5.5L4 16"/><path d="M4 20v-4h4"/>'), nm:'自动化', ds:'任务与触发器'},
+    {ic:I('<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>'), nm:'系统', ds:'环境与权限'},
+    {ic:I('<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none"/>'), nm:'外观', ds:'浅色 / 深色'},
+    {ic:I('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'), nm:'文件', ds:'文件管理器'},
+    {ic:I('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 2.6 15.4 0 18M12 3c-2.6 2.6-2.6 15.4 0 18"/>'), nm:'网络', ds:'代理与隧道'},
+    {ic:I('<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="8" r=".9" fill="currentColor" stroke="none"/>'), nm:'关于', ds:'版本与许可'},
+  ];
+  const grid=$('#cat-grid');
+  cats.forEach(c=>{
+    const el=document.createElement('div');
+    el.className='cat glass'+(c.feat?' feat':'');
+    el.dataset.name=c.nm;
+    el.innerHTML='<div class="ic">'+c.ic+'</div><div class="nm">'+c.nm+'</div><div class="ds">'+c.ds+'</div>';
+    el.addEventListener('click',()=>{
+      if(c.nm==='插件市场') flash('插件市场：敬请期待 · 以后这里上架扩展');
+      else if(c.nm==='终端主题'){ showView('v-settings'); flash('终端主题 → 设置 / 五套风格'); }
+      else flash('打开：'+c.nm);
+    });
+    grid.appendChild(el);
+  });
+  $('#catSearch').addEventListener('input',e=>{
+    const q=e.target.value.trim();
+    $$('#cat-grid .cat').forEach(el=>{ el.style.display = (!q||el.dataset.name.includes(q))?'':'none'; });
+  });
+
+  /* ---- 13. 玻璃开关 ---- */
+  $$('[data-tg]').forEach(t=>t.addEventListener('click',()=>t.classList.toggle('on')));
+
+  /* ---- 14. 滚动收标题 + 标签栏收矮（tabBarMinimizeBehavior） ---- */
+  function onScroll(s){
+    const view=s.closest('.view'); if(view) view.classList.toggle('scrolled', s.scrollTop>8);
+    const anyScrolled=$$('.view.scrolled').length>0;
+    $('#tabbar').classList.toggle('min', anyScrolled);
+  }
+  $$('.scroll').forEach(s=>s.addEventListener('scroll',()=>onScroll(s)));
+  $('#term-out').addEventListener('scroll',()=>onScroll($('#term-out')));
+
+  /* ---- 15. 初始强调色 ---- */
+  $('#acc-val').textContent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+})();
+</script>
+</body>
+</html>

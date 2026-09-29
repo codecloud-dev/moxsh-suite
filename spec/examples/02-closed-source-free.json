@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "1.0",
+  "id": "com.moxsh.plugin.netfast",
+  "name": "极速下载器",
+  "nameI18n": { "en": "NetFast Downloader" },
+  "version": "2.4.0",
+  "author": { "name": "Lumen Labs", "email": "hi@lumen.dev", "moxId": "mox_lumen" },
+  "publisher": { "id": "lumenlabs", "name": "Lumen Labs", "verified": true, "certFingerprint": "sha256:77aa12...cc90" },
+  "description": "多线程、断点续传、镜像加速的图形化下载器，专为国内网络优化。",
+  "descriptionI18n": { "en": "A multi-threaded, resumable, mirror-accelerated downloader tuned for China networks." },
+  "longDescription": "闭源组件，仅分发编译产物（dex-bundle）。核心为自研多线程分片引擎，内置镜像测速与自动择优。",
+  "icon": "assets/icon.png",
+  "screenshots": ["assets/s1.png", "assets/s2.png"],
+  "categories": ["networking", "utility"],
+  "tags": ["download", "accelerate", "mirror"],
+  "keywords": ["下载", "加速", "镜像", "download"],
+  "homepage": "https://lumen.dev/netfast",
+  "license": { "spdx": "LicenseRef-Proprietary", "name": "Lumen Proprietary License", "url": "https://lumen.dev/netfast/license" },
+  "visibility": "closed-source",
+  "pricing": {
+    "model": "free",
+    "provider": { "type": "custom", "custom": { "url": "https://lumen.dev/netfast/support", "instructions": "免费使用，可通过爱发电赞助获得优先支持。" } },
+    "note": "闭源但免费；作者接受赞助（爱发电）。"
+  },
+  "compatibility": {
+    "minAppVersion": "0.9.0",
+    "minPluginApi": "1.0",
+    "android": { "minSdk": 26, "targetSdk": 35 },
+    "abis": ["arm64-v8a", "armeabi-v7a"],
+    "supportedOs": ["android"]
+  },
+  "distribution": {
+    "type": "direct",
+    "channel": "stable",
+    "artifact": {
+      "url": "https://dl.lumen.dev/netfast/2.4.0/netfast.moxp",
+      "size": 1567234,
+      "sha256": "aa0b12c3d4e5f60718293a4b5c6d7e8f901a2b3c4d5e6f708192a3b4c5d6e7f8",
+      "format": "dex-bundle",
+      "compression": "gzip"
+    },
+    "mirrors": ["https://mirror.moxsh.app/lumen/netfast-2.4.0.moxp"],
+    "autoUpdate": true
+  },
+  "entrypoints": {
+    "registrar": "dev.lumen.netfast.NetFastRegistrar",
+    "screen": "dev.lumen.netfast.ui.NetFastScreen",
+    "services": [{ "name": "NetFastService", "class": "dev.lumen.netfast.NetFastService", "foreground": true }],
+    "commands": [{ "name": "netfast", "usage": "netfast <url> [-o out]", "description": "命令行触发图形下载器" }]
+  },
+  "permissions": [
+    { "name": "network", "reason": "下载文件需要通过互联网获取数据" },
+    { "name": "storage.write", "reason": "把下载好的文件保存到你指定的目录" },
+    { "name": "notification", "reason": "下载完成或失败时提醒你", "optional": true }
+  ],
+  "dependencies": {},
+  "capabilities": ["file.manager", "network.proxy"],
+  "settings": [
+    { "key": "threads", "type": "int", "label": "并发线程数", "default": 8, "min": 1, "max": 32, "advanced": true },
+    { "key": "autoMirror", "type": "bool", "label": "自动镜像测速", "default": true }
+  ],
+  "changelog": [
+    { "version": "2.4.0", "date": "2026-09-12", "changes": ["新增镜像自动测速", "修复大文件续传偶发失败"] }
+  ],
+  "integrity": {
+    "checksum": { "algo": "sha256", "value": "aa0b12c3d4e5f60718293a4b5c6d7e8f901a2b3c4d5e6f708192a3b4c5d6e7f8" },
+    "signature": { "algo": "ecdsa", "value": "MEUCIQ...lumen...sig", "keyId": "lumen-2026", "certFingerprint": "sha256:77aa12...cc90", "timestamp": "2026-09-12T06:30:00Z" }
+  },
+  "updatedAt": "2026-09-12T06:30:00Z"
+}

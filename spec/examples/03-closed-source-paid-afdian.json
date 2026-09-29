@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "1.0",
+  "id": "com.moxsh.plugin.dockerui",
+  "name": "Docker 图形控制台",
+  "nameI18n": { "en": "Docker UI Console" },
+  "version": "1.0.0",
+  "author": { "name": "CloudHarbor", "url": "https://cloudharbor.io", "moxId": "mox_harbor" },
+  "publisher": { "id": "cloudharbor", "name": "CloudHarbor", "verified": true, "certFingerprint": "sha256:9c1b...44de" },
+  "description": "在手机上用图形界面管理 Docker 容器：一键起停、看日志、进容器终端。",
+  "descriptionI18n": { "en": "Manage Docker containers with a GUI: start/stop, logs, exec into a shell." },
+  "longDescription": "## Docker 图形控制台（闭源付费）\n\n- 一键起停/重启容器，实时资源占用\n- 图形化查看日志、进入容器终端\n- 镜像管理与网络配置\n\n买断授权，永久可用，含 1 年更新。",
+  "icon": "assets/icon.png",
+  "banner": "assets/banner.png",
+  "screenshots": ["assets/s1.png", "assets/s2.png", "assets/s3.png", "assets/s4.png"],
+  "categories": ["container", "development"],
+  "tags": ["docker", "container", "devops"],
+  "keywords": ["docker", "容器", "运维", "devops"],
+  "homepage": "https://cloudharbor.io/dockerui",
+  "issues": "https://cloudharbor.io/dockerui/support",
+  "terms": "https://cloudharbor.io/terms",
+  "privacy": "https://cloudharbor.io/privacy",
+  "license": { "spdx": "LicenseRef-Proprietary", "name": "CloudHarbor Commercial License", "url": "https://cloudharbor.io/dockerui/license" },
+  "visibility": "closed-source",
+  "pricing": {
+    "model": "paid",
+    "currency": "CNY",
+    "price": 29,
+    "compareAtPrice": 49,
+    "trial": { "enabled": true, "days": 7, "featureLimited": false },
+    "plans": [
+      { "id": "lifetime", "name": "买断版", "description": "一次性买断，永久使用 + 1 年更新", "price": 29, "compareAtPrice": 49, "billing": "one-time", "recommended": true, "features": ["不限容器数量", "含 1 年更新", "邮件支持"] },
+      { "id": "lifetime_plus", "name": "买断 + 永久更新", "price": 59, "billing": "one-time", "features": ["不限容器数量", "永久更新", "优先支持", "可激活 3 台设备"], "quota": { "devices": 3 } }
+    ],
+    "provider": {
+      "type": "afdian",
+      "afdian": {
+        "creatorPage": "https://afdian.com/a/cloudharbor",
+        "shopItems": [
+          { "planId": "lifetime", "itemId": "f3b2c1d0e9", "skuId": "dockerui-life" },
+          { "planId": "lifetime_plus", "itemId": "a1b2c3d4e5", "skuId": "dockerui-plus" }
+        ],
+        "orderQueryTemplate": "https://api.moxsh.app/license/afdian/verify?order={orderNo}&item=dockerui",
+        "verifyEndpoint": "https://api.moxsh.app/license/afdian/verify",
+        "unlockCodeFormat": "^MOXSH-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$",
+        "bindBy": "order-no"
+      }
+    },
+    "license": {
+      "required": true,
+      "type": "order-query",
+      "offlineGraceDays": 7,
+      "devicesPerLicense": 1,
+      "restoreUrl": "https://cloudharbor.io/dockerui/restore"
+    },
+    "refundPolicy": "购买后 7 天内未激活可全额退款；已激活不支持退款。",
+    "taxIncluded": true,
+    "note": "学生凭学生证联系作者领取 5 折优惠码。"
+  },
+  "compatibility": {
+    "minAppVersion": "0.9.0",
+    "minPluginApi": "1.0",
+    "android": { "minSdk": 26, "targetSdk": 35 },
+    "abis": ["arm64-v8a", "x86_64"],
+    "supportedOs": ["android"],
+    "requiresRoot": false,
+    "requiresProot": true
+  },
+  "distribution": {
+    "type": "registry",
+    "channel": "stable",
+    "artifact": {
+      "url": "https://cdn.moxsh.app/plugins/dockerui-1.0.0.moxp",
+      "size": 3489210,
+      "sha256": "11223344556677889900aabbccddeeff00112233445566778899aabbccddeeff",
+      "format": "moxp",
+      "compression": "zstd"
+    },
+    "mirrors": ["https://ghproxy.net/https://cdn.moxsh.app/plugins/dockerui-1.0.0.moxp"],
+    "registry": { "name": "moxsh-official", "url": "https://registry.moxsh.app" },
+    "autoUpdate": true
+  },
+  "entrypoints": {
+    "registrar": "io.cloudharbor.dockerui.DockerUiRegistrar",
+    "screen": "io.cloudharbor.dockerui.ui.DockerConsoleScreen",
+    "commands": [
+      { "name": "dockerui", "usage": "dockerui", "description": "打开 Docker 图形控制台" }
+    ],
+    "hooks": ["onInstall", "onEnable", "onSessionStart"]
+  },
+  "permissions": [
+    { "name": "container", "reason": "需要与容器运行时交互来起停、查看容器" },
+    { "name": "exec", "reason": "进入容器终端需要执行 shell 命令" },
+    { "name": "storage.read", "reason": "读取本地镜像缓存与配置文件" },
+    { "name": "network", "reason": "拉取镜像与检查更新" }
+  ],
+  "dependencies": {
+    "plugins": [{ "id": "com.moxsh.plugin.core", "version": ">=1.0.0" }],
+    "native": [{ "name": "docker-cli", "abi": "arm64-v8a", "version": ">=24.0" }]
+  },
+  "capabilities": ["container.docker", "terminal.ui"],
+  "settings": [
+    { "key": "defaultRegistry", "type": "string", "label": "默认镜像源", "default": "registry.cn-hangzhou.aliyuncs.com" },
+    { "key": "pollInterval", "type": "int", "label": "状态轮询间隔", "default": 3, "min": 1, "max": 30, "unit": "秒", "advanced": true }
+  ],
+  "i18n": { "defaultLocale": "zh-Hans", "locales": ["zh-Hans", "en"], "path": "locales/" },
+  "changelog": [
+    { "version": "1.0.0", "date": "2026-09-25", "changes": ["首个正式版", "支持一键起停 / 日志 / 进入终端"] }
+  ],
+  "integrity": {
+    "checksum": { "algo": "sha256", "value": "11223344556677889900aabbccddeeff00112233445566778899aabbccddeeff" },
+    "signature": { "algo": "ed25519", "value": "MEQCIH...dockerui...sig", "keyId": "cloudharbor-2026", "certFingerprint": "sha256:9c1b...44de", "timestamp": "2026-09-25T02:00:00Z" }
+  },
+  "createdAt": "2026-08-01T00:00:00Z",
+  "updatedAt": "2026-09-25T02:00:00Z"
+}
