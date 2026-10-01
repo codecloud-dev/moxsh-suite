@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>moxsh · 设计原型中心（Liquid Glass）</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "SF Pro Display", "PingFang SC", "Noto Sans SC", sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0e1a 0%, #141b30 40%, #1a1440 70%, #0d1b2e 100%);
+    color: #eef2ff;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 48px 20px 64px;
+    overflow-x: hidden;
+  }
+  /* 背景光斑 */
+  .orb { position: fixed; border-radius: 50%; filter: blur(90px); opacity: .5; pointer-events: none; z-index: 0; }
+  .orb1 { width: 420px; height: 420px; background: #3b5bff; top: -120px; left: -100px; }
+  .orb2 { width: 360px; height: 360px; background: #8a3bff; bottom: -100px; right: -80px; }
+  .orb3 { width: 280px; height: 280px; background: #00c8ff; top: 40%; right: 20%; opacity: .3; }
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 860px; }
+  header { text-align: center; margin-bottom: 44px; }
+  .logo {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 10px 22px; border-radius: 999px; margin-bottom: 22px;
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    font-size: 14px; letter-spacing: .12em; color: #9db4ff;
+  }
+  h1 { font-size: 40px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 12px; }
+  h1 .grad { background: linear-gradient(92deg, #7aa2ff, #c58aff 55%, #4fd8ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { color: #9aa8cc; font-size: 15px; line-height: 1.7; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+  @media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr; } .card.wide { grid-column: 1 / -1; } }
+  a.card {
+    display: block; text-decoration: none; color: inherit; position: relative;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+    border-radius: 22px; padding: 26px 24px; overflow: hidden;
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    transition: transform .25s ease, border-color .25s ease, background .25s ease;
+  }
+  a.card:hover { transform: translateY(-4px); border-color: rgba(140,170,255,.55); background: rgba(255,255,255,.10); }
+  a.card::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(160deg, rgba(255,255,255,.16), transparent 40%);
+  }
+  .tag { display: inline-block; font-size: 11px; letter-spacing: .1em; padding: 4px 10px; border-radius: 999px; margin-bottom: 14px; background: rgba(122,162,255,.16); border: 1px solid rgba(122,162,255,.35); color: #a9c2ff; }
+  .tag.pink { background: rgba(197,138,255,.14); border-color: rgba(197,138,255,.35); color: #dcb8ff; }
+  .tag.cyan { background: rgba(79,216,255,.12); border-color: rgba(79,216,255,.32); color: #8fe9ff; }
+  .card h2 { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+  .card p { font-size: 13.5px; color: #a7b3d4; line-height: 1.75; }
+  .go { display: inline-block; margin-top: 16px; font-size: 13px; color: #9db4ff; }
+  footer { margin-top: 40px; text-align: center; font-size: 12.5px; color: #6f7d9e; line-height: 2; }
+  footer a { color: #9db4ff; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+<div class="wrap">
+  <header>
+    <div class="logo">◈ MOXSH · LIQUID GLASS</div>
+    <h1>moxsh <span class="grad">设计原型中心</span></h1>
+    <p class="sub">液态玻璃 Android 终端 —— 交互原型与视觉方案在线预览<br>全面脱离 Termux 又全面兼容 Termux 生态</p>
+  </header>
+
+  <div class="grid">
+    <a class="card wide" href="moxsh-ui-5styles.html">
+      <span class="tag">iOS 27 · Liquid Glass</span>
+      <h2>Apple 忠实复刻（实时可点）</h2>
+      <p>按 iOS 27 液态玻璃真实材质复刻的完整可交互原型：多会话标签、玻璃抽屉、设置页与 AI 配置屏，白底高可读性默认主题。</p>
+      <span class="go">打开原型 →</span>
+    </a>
+    <a class="card" href="moxsh-ui-mockup.html">
+      <span class="tag pink">小白向 · 图形化</span>
+      <h2>全玻璃图形化预览</h2>
+      <p>面向小白的图形化容器管理：发行版安装、包管理、资源监控，全部玻璃拟态卡片与引导式流程。</p>
+      <span class="go">打开原型 →</span>
+    </a>
+    <a class="card" href="moxsh-design-preview.html">
+      <span class="tag cyan">风格探索</span>
+      <h2>3 套风格设计稿</h2>
+      <p>早期三套视觉风格对比稿（深空 / 毛玻璃 / 极简），记录设计演进路径，供对比与回溯。</p>
+      <span class="go">打开原型 →</span>
+    </a>
+  </div>
+
+  <footer>
+    <a href="https://codecloud-dev.github.io/mox-site/" target="_blank">官网</a> ·
+    <a href="https://github.com/codecloud-dev/moxsh-suite/tree/master/spec" target="_blank">插件规范 Plugin Spec</a> ·
+    <a href="https://github.com/codecloud-dev/moxsh-suite/tree/master/docs" target="_blank">设计文档</a> ·
+    <a href="https://github.com/codecloud-dev/moxsh-suite" target="_blank">GitHub 仓库</a>
+    <br>moxsh 系列开源 · Liquid Glass Design System
+  </footer>
+</div>
+</body>
+</html>
