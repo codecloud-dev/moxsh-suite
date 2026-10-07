@@ -19,10 +19,12 @@ moxsh-suite  (本仓库 / monorepo，默认分支 master)
 
 ## 子模块锁定版本
 
-| 子模块 | 仓库 | 锁定提交 |
+| 子模块 | 仓库 | 锁定提交（大版本 1.0.0） |
 |---|---|---|
-| `app`  | `codecloud-dev/moxsh-terminal` | `e364b76` |
-| `site` | `codecloud-dev/mox-site`        | `9b22743` |
+| `app`  | `codecloud-dev/moxsh-terminal` | `dad8ff5`（[v1.0.0](https://github.com/codecloud-dev/moxsh-terminal/releases/tag/v1.0.0)） |
+| `site` | `codecloud-dev/mox-site`        | `bcdc62b`（[v1.0.0](https://github.com/codecloud-dev/mox-site/releases/tag/v1.0.0)） |
+
+> 本仓库随 MoX 全家桶一同升到 **1.0.0** 大版本里程碑：两个子模块均已 bump 到各自的 v1.0.0 发布提交。其余公开仓库（agent-core / moxsh-plugins / moxwebgpu）也已同期发布 1.0.0；moxbox / moxcode 仍属「规划中 · 待定」，本次不做。
 
 说明：锁定提交是 monorepo 初始化时的快照。子仓库演进后，在 `moxsh-suite` 中 `cd` 进子模块 `git pull` 再回到根目录 `git add app site && git commit` 即可 bump 版本。
 
