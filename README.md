@@ -12,6 +12,8 @@
 
 本仓库是 moxsh 家族的**资产总入口**：把散落在各处的真机源码、官网、设计原型、文档与规范集中收纳，五块分明，一眼看清。
 
+<p><b>⭐ 如果 moxsh 对你有用,欢迎点个 <a href="https://github.com/codecloud-dev/moxsh-suite">Star</a> —— 它能让更多开发者发现这个移动 Linux 终端!</b></p>
+
 <details>
 <summary>📑 目录 · Contents</summary>
 
