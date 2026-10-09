@@ -17,6 +17,8 @@ This repo is the **asset hub** of the moxsh family: it gathers the scattered rea
 
 <p align="center"><b>⭐ If moxsh is useful to you, please give it a <a href="https://github.com/codecloud-dev/moxsh-suite">Star</a> — it helps more developers discover this mobile Linux terminal!</b></p>
 
+<p align="center">💛 Found it useful? <a href="https://afdian.com/a/cloudharbor">Buy the author a coffee on AfDian</a> — CN payments (WeChat / Alipay) supported, the biggest encouragement for an indie dev.</p>
+
 <details>
 <summary>📑 Contents</summary>
 
