@@ -8,6 +8,8 @@
 </p>
 
 
+<p align="center"><a href="README.md">中文</a> · <a href="README.en.md">English</a></p>
+
 > **moxsh** —— 完全脱离 Termux、全面兼容 Termux、性能更强、**整个 App 都是液态玻璃**的移动 Linux 终端。
 
 本仓库是 moxsh 家族的**资产总入口**：把散落在各处的真机源码、官网、设计原型、文档与规范集中收纳，五块分明，一眼看清。
