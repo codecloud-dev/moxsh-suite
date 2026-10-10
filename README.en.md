@@ -17,6 +17,19 @@ This repo is the **asset hub** of the moxsh family: it gathers the scattered rea
 
 <p align="center"><b>⭐ If moxsh is useful to you, please give it a <a href="https://github.com/codecloud-dev/moxsh-suite">Star</a> — it helps more developers discover this mobile Linux terminal!</b></p>
 
+
+
+## 🐛 Welcome to roast me
+
+> This is an early-stage project — **bugs exist, and probably plenty of them.** I'm not pretending it's perfect.
+> Every pitfall you hit and every gripe you have is a chance to help make it better.
+
+- 💥 Crashed / black screen / won't run? → [File a bug report](https://github.com/codecloud-dev/moxsh-suite/issues)
+- 💡 Want a feature? → [Open a feature request](https://github.com/codecloud-dev/moxsh-suite/issues)
+- 🗯️ Just want to rant or nitpick? → Issues are welcome too, label it whatever 😄
+
+I read every issue and fix what I can, fast. Let's grow this from "runs" to "delightful" 💪
+
 <p align="center">💛 Found it useful? <a href="https://afdian.com/a/cloudharbor">Buy the author a coffee on AfDian</a> — CN payments (WeChat / Alipay) supported, the biggest encouragement for an indie dev.</p>
 
 <details>
