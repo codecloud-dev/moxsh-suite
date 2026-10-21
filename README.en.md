@@ -1,5 +1,8 @@
 > **🌐 Canonical repository is on GitHub** — [`codecloud-dev/moxsh-suite`](https://github.com/codecloud-dev/moxsh-suite) is the single source of truth: please file all issues and pull requests there. The [Gitee mirror](https://gitee.com/thousand-code-crafts/moxsh-suite) is a read-only copy synced hourly for faster access in mainland China.
 
+<p align="center"><img src="assets/logo.svg" width="128" alt="MoX"/></p>
+
+
 # moxsh · monorepo
 
 <p align="center">
