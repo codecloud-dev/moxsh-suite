@@ -1,4 +1,4 @@
-> **🌐 主仓库在 GitHub** — [`codecloud-dev/moxsh-suite`](https://mox-site.pages.dev/go.html?r=moxsh-suite) 是唯一主源：Issue、Pull Request、功能讨论请统一提交到 GitHub。[Gitee 镜像](https://gitee.com/thousand-code-crafts/moxsh-suite) 仅供国内高速只读访问，每小时从 GitHub 自动同步。
+> **🌐 主仓库在 GitHub** — [`codecloud-dev/moxsh-suite`](https://mox-site.pages.dev/go?r=moxsh-suite) 是唯一主源：Issue、Pull Request、功能讨论请统一提交到 GitHub。[Gitee 镜像](https://gitee.com/thousand-code-crafts/moxsh-suite) 仅供国内高速只读访问，每小时从 GitHub 自动同步。
 
 <p align="center"><img src="assets/logo.svg" width="128" alt="MoX"/></p>
 
@@ -21,7 +21,7 @@
 
 <p align="center"><img src="assets/demo.svg" width="760" alt="moxsh-suite 套件动图：终端/插件/核心/官网四个模块围绕中央 mox 徽标错峰浮动"></p>
 
-<p><b>⭐ 如果 moxsh 对你有用,欢迎点个 <a href="https://mox-site.pages.dev/go.html?r=moxsh-suite">Star</a> —— 它能让更多开发者发现这个移动 Linux 终端!</b></p>
+<p><b>⭐ 如果 moxsh 对你有用,欢迎点个 <a href="https://mox-site.pages.dev/go?r=moxsh-suite">Star</a> —— 它能让更多开发者发现这个移动 Linux 终端!</b></p>
 
 
 
@@ -30,8 +30,8 @@
 > 这是个刚起步的项目，**bug 肯定有，而且不少**。我不装完美——
 > 你踩到的每一个坑、每一个槽点，都是帮我把它养好的机会。
 
-- 💥 遇到崩溃 / 黑屏 / 跑不起来？→ [提个 Bug 报告](https://mox-site.pages.dev/go.html?r=moxsh-suite&p=issues)
-- 💡 有想要的功能？→ [开个需求](https://mox-site.pages.dev/go.html?r=moxsh-suite&p=issues)
+- 💥 遇到崩溃 / 黑屏 / 跑不起来？→ [提个 Bug 报告](https://mox-site.pages.dev/go?r=moxsh-suite&p=issues)
+- 💡 有想要的功能？→ [开个需求](https://mox-site.pages.dev/go?r=moxsh-suite&p=issues)
 - 🗯️ 单纯想吐槽、挑刺？→ 也欢迎开 issue，标签随便打 😄
 
 每个 issue 我都会看，能修的尽快修。一起把它从“能跑”养到“好用” 💪
@@ -71,8 +71,8 @@ moxsh-suite  (本仓库 / monorepo，默认分支 master)
 
 | 子模块 | 仓库 | 锁定提交（大版本 1.0.0） |
 |---|---|---|
-| `app`  | `codecloud-dev/moxsh-terminal` | `dad8ff5`（[v1.0.0](https://mox-site.pages.dev/go.html?r=moxsh-terminal&p=releases/tag/v1.0.0)） |
-| `site` | `codecloud-dev/mox-site`        | `bcdc62b`（[v1.0.0](https://mox-site.pages.dev/go.html?r=mox-site&p=releases/tag/v1.0.0)） |
+| `app`  | `codecloud-dev/moxsh-terminal` | `dad8ff5`（[v1.0.0](https://mox-site.pages.dev/go?r=moxsh-terminal&p=releases/tag/v1.0.0)） |
+| `site` | `codecloud-dev/mox-site`        | `bcdc62b`（[v1.0.0](https://mox-site.pages.dev/go?r=mox-site&p=releases/tag/v1.0.0)） |
 
 > 本仓库随 MoX 全家桶一同升到 **1.0.0** 大版本里程碑：两个子模块均已 bump 到各自的 v1.0.0 发布提交。其余公开仓库（agent-core / moxsh-plugins / moxwebgpu）也已同期发布 1.0.0；moxbox / moxcode 仍属「规划中 · 待定」，本次不做。
 
