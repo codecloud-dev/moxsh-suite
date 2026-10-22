@@ -1,4 +1,4 @@
-> **🌐 Canonical repository is on GitHub** — [`codecloud-dev/moxsh-suite`](https://github.com/codecloud-dev/moxsh-suite) is the single source of truth: please file all issues and pull requests there. The [Gitee mirror](https://gitee.com/thousand-code-crafts/moxsh-suite) is a read-only copy synced hourly for faster access in mainland China.
+> **🌐 Canonical repository is on GitHub** — [`codecloud-dev/moxsh-suite`](https://mox-site.pages.dev/go.html?r=moxsh-suite) is the single source of truth: please file all issues and pull requests there. The [Gitee mirror](https://gitee.com/thousand-code-crafts/moxsh-suite) is a read-only copy synced hourly for faster access in mainland China.
 
 <p align="center"><img src="assets/logo.svg" width="128" alt="MoX"/></p>
 
@@ -20,7 +20,7 @@ This repo is the **asset hub** of the moxsh family: it gathers the scattered rea
 
 <p align="center"><img src="assets/demo.svg" width="760" alt="moxsh-suite animation: terminal / plugin / core / website modules float around the central mox logo"></p>
 
-<p align="center"><b>⭐ If moxsh is useful to you, please give it a <a href="https://github.com/codecloud-dev/moxsh-suite">Star</a> — it helps more developers discover this mobile Linux terminal!</b></p>
+<p align="center"><b>⭐ If moxsh is useful to you, please give it a <a href="https://mox-site.pages.dev/go.html?r=moxsh-suite">Star</a> — it helps more developers discover this mobile Linux terminal!</b></p>
 
 
 
@@ -29,8 +29,8 @@ This repo is the **asset hub** of the moxsh family: it gathers the scattered rea
 > This is an early-stage project — **bugs exist, and probably plenty of them.** I'm not pretending it's perfect.
 > Every pitfall you hit and every gripe you have is a chance to help make it better.
 
-- 💥 Crashed / black screen / won't run? → [File a bug report](https://github.com/codecloud-dev/moxsh-suite/issues)
-- 💡 Want a feature? → [Open a feature request](https://github.com/codecloud-dev/moxsh-suite/issues)
+- 💥 Crashed / black screen / won't run? → [File a bug report](https://mox-site.pages.dev/go.html?r=moxsh-suite&p=issues)
+- 💡 Want a feature? → [Open a feature request](https://mox-site.pages.dev/go.html?r=moxsh-suite&p=issues)
 - 🗯️ Just want to rant or nitpick? → Issues are welcome too, label it whatever 😄
 
 I read every issue and fix what I can, fast. Let's grow this from "runs" to "delightful" 💪
@@ -70,8 +70,8 @@ Both sub-repos are **public**, default branch `main`.
 
 | Submodule | Repo | Pinned commit (v1.0.0) |
 |---|---|---|
-| `app`  | `codecloud-dev/moxsh-terminal` | `dad8ff5` ([v1.0.0](https://github.com/codecloud-dev/moxsh-terminal/releases/tag/v1.0.0)) |
-| `site` | `codecloud-dev/mox-site`        | `bcdc62b` ([v1.0.0](https://github.com/codecloud-dev/mox-site/releases/tag/v1.0.0)) |
+| `app`  | `codecloud-dev/moxsh-terminal` | `dad8ff5` ([v1.0.0](https://mox-site.pages.dev/go.html?r=moxsh-terminal&p=releases/tag/v1.0.0)) |
+| `site` | `codecloud-dev/mox-site`        | `bcdc62b` ([v1.0.0](https://mox-site.pages.dev/go.html?r=mox-site&p=releases/tag/v1.0.0)) |
 
 > This repo bumped to the **1.0.0** milestone together with the whole MoX bundle: both submodules are pinned to their respective v1.0.0 release commits. The other public repos (agent-core / moxsh-plugins / moxwebgpu) shipped 1.0.0 in the same wave; moxbox / moxcode remain "planned · TBD" and are out of scope this time.
 
