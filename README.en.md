@@ -68,12 +68,12 @@ Both sub-repos are **public**, default branch `main`.
 
 ## 🔗 Pinned submodule versions
 
-| Submodule | Repo | Pinned commit (v1.0.0) |
+| Submodule | Repo | Pinned commit (moxsh-terminal v1.0.0 · M7) |
 |---|---|---|
-| `app`  | `codecloud-dev/moxsh-terminal` | `dad8ff5` ([v1.0.0](https://mox-site.pages.dev/go?r=moxsh-terminal&p=releases/tag/v1.0.0)) |
+| `app`  | `codecloud-dev/moxsh-terminal` | `709cd64` ([v1.0.0](https://mox-site.pages.dev/go?r=moxsh-terminal&p=releases/tag/v1.0.0)) |
 | `site` | `codecloud-dev/mox-site`        | `bcdc62b` ([v1.0.0](https://mox-site.pages.dev/go?r=mox-site&p=releases/tag/v1.0.0)) |
 
-> This repo bumped to the **1.0.0** milestone together with the whole MoX bundle: both submodules are pinned to their respective v1.0.0 release commits. The other public repos (agent-core / moxsh-plugins / moxwebgpu) shipped 1.0.0 in the same wave; moxbox / moxcode remain "planned · TBD" and are out of scope this time.
+> This repo bumped to the **1.0.0** milestone together with the whole MoX bundle: both submodules are pinned to their respective v1.0.0 release commits. The other public repos (agent-core / moxsh-plugins / moxwebgpu) shipped 1.0.0 in the same wave; moxbox / moxcode remain "planned · TBD" and are out of scope this time. This wave further **advances to the M7 milestone**: the `app` submodule is synced to moxsh-terminal v1.0.0 (terminal-core aligned to 1.0.0, commit `709cd64`), and roadmap M7 (performance & ecosystem deepening) is now open.
 
 Note: the pinned commit is a snapshot taken at monorepo init. After a submodule evolves, `cd` into it, `git pull`, then back at root `git add app site && git commit` to bump the version.
 
