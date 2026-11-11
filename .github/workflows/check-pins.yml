@@ -2,9 +2,9 @@ name: 校验子模块锁定版本与兼容矩阵
 
 on:
   push:
-    paths: ['README.md', 'compat-matrix.json', 'app', 'site', 'scripts/**']
+    paths: ['README.md', 'README.en.md', 'compat-matrix.json', 'app', 'site', 'scripts/**']
   pull_request:
-    paths: ['README.md', 'compat-matrix.json', 'app', 'site', 'scripts/**']
+    paths: ['README.md', 'README.en.md', 'compat-matrix.json', 'app', 'site', 'scripts/**']
   workflow_dispatch:
 
 permissions:

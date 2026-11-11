@@ -65,7 +65,11 @@ moxsh-suite  (本仓库 / monorepo，默认分支 master)
 └── spec/   (实体文件)  插件清单 JSON 规范 (Schema + 多套示例)
 ```
 
-两个子仓库均为 **public**，默认分支 `main`。
+`app`（`codecloud-dev/moxsh-terminal`）是 **public**，`site`（`codecloud-dev/mox-site`）是 **private**，两者默认分支均为 `main`（本总仓自身用 `master`）。
+
+> **2026-11-11 修正**：此前这里写「两个子仓库均为 public」，是错的。这正是 suite 的 legacy
+> GitHub Pages 构建执行 `git submodule update --init --recursive` 时对 `site` 报
+> `Repository not found` 的原因。私有子模块只是维护者本地指针，匿名 CI / Pages 拉不到。
 
 ## 🔗 子模块锁定版本
 
@@ -76,7 +80,8 @@ moxsh-suite  (本仓库 / monorepo，默认分支 master)
 | `site` | `codecloud-dev/mox-site` | `918b51f`（[查看该提交](https://github.com/codecloud-dev/mox-site/tree/918b51f302f2c608dab0225749181774813d6509)） |
 
 > 本区块由 `scripts/sync-submodule-pins.mjs` 从 `git ls-tree HEAD` 生成，CI 由 `check-pins.yml` 校验；
-> 手动改这里会在下次 PR 直接失败。bump 子模块后请重跑 `node scripts/sync-submodule-pins.mjs`。
+> 手动改这里会在下次 PR 直接失败。bump 子模块后请重跑 `node scripts/sync-submodule-pins.mjs`
+>（中英两份 README 会一起更新）。
 <!-- SUBMODULE_PINS:END -->
 
 > **2026-11-11 修正**：此前这里手写 `709cd64` / `bcdc62b` 两个 pin，与真实 gitlink

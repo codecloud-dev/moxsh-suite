@@ -1,0 +1,48 @@
+name: 部署 suite 公开索引页到 GitHub Pages
+
+# 2026-11-11 审计修复：本仓 GitHub Pages 原为 legacy Jekyll 构建（source=master:/）。
+# 它会执行 git submodule update --init --recursive，而 site 子模块是 private repo，
+# 匿名构建必然报 "Repository not found"，Pages 长期 status=errored。
+# 现改为 workflow 构建：只发布 pages/ 下的公开索引页，显式 submodules: false，
+# 既修好构建，也避免私有子模块内容被 Jekyll 发布到公开站点。
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'pages/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout（不拉子模块）
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 1
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上传站点产物（仅公开索引页）
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
+
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

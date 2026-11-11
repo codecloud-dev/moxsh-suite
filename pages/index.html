@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index, follow">
+<title>MoX · moxsh-suite 组件索引</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #fff;
+    color: #111418;
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 880px; margin: 0 auto; padding: 72px 24px 96px; }
+  .eyebrow { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #6b7280; }
+  h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.15; margin: 12px 0 16px; letter-spacing: -.02em; }
+  .lead { font-size: 18px; color: #414b57; margin: 0 0 8px; max-width: 680px; }
+  .notice {
+    margin: 32px 0 40px; padding: 18px 20px; border: 1px solid #e5e7eb;
+    border-left: 3px solid #2f6feb; border-radius: 10px; background: #fafbfc;
+    font-size: 14px; color: #414b57;
+  }
+  .notice b { color: #111418; }
+  h2 { font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; margin: 40px 0 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  a.card {
+    display: block; padding: 18px 20px; border: 1px solid #e5e7eb; border-radius: 12px;
+    text-decoration: none; color: inherit; transition: border-color .18s, box-shadow .18s, transform .18s;
+  }
+  a.card:hover { border-color: #2f6feb; box-shadow: 0 6px 24px rgba(47,111,235,.10); transform: translateY(-2px); }
+  .card .name { font-weight: 600; font-size: 15px; }
+  .card .desc { font-size: 13px; color: #6b7280; margin-top: 5px; }
+  .primary {
+    display: inline-block; margin: 0 0 32px; padding: 12px 22px; border-radius: 10px;
+    background: #111418; color: #fff; text-decoration: none; font-size: 15px; font-weight: 600;
+  }
+  .primary:hover { background: #2f6feb; }
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid #eef0f2; font-size: 13px; color: #8a929c; }
+  code { background: #f3f4f6; padding: 2px 6px; border-radius: 5px; font-size: .9em; }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">MoX Project · Monorepo Index</div>
+  <h1>moxsh-suite</h1>
+  <p class="lead">MoX 系列的总仓与版本编排中心：锁定各子仓库的提交、维护插件规范与兼容矩阵。</p>
+
+  <a class="primary" href="https://mox-site.pages.dev/">前往 MoX 官网 →</a>
+
+  <div class="notice">
+    <b>关于这个页面</b><br>
+    这是 <code>moxsh-suite</code> 仓库的公开 GitHub Pages 索引页，只包含可公开的分发信息与仓库链接。
+    真正的官网、在线体验与文档站部署在 <code>mox-site</code> 的 Pages 上。<br><br>
+    本仓的 <code>site</code> 子模块是<b>私有</b>维护者指针：匿名 CI / Pages 无法拉取，因此部署流程显式使用
+    <code>submodules: false</code>，不会尝试初始化子模块，也不会把私有内容发布到这里。
+  </div>
+
+  <h2>组件仓库</h2>
+  <div class="grid">
+    <a class="card" href="https://github.com/codecloud-dev/moxsh-terminal">
+      <div class="name">moxsh-terminal</div><div class="desc">Android 真机终端 · App 主仓</div></a>
+    <a class="card" href="https://github.com/codecloud-dev/moxsh-proot">
+      <div class="name">moxsh-proot</div><div class="desc">Rust 自研容器引擎 / CLI / TUI</div></a>
+    <a class="card" href="https://github.com/codecloud-dev/moxsh-plugins">
+      <div class="name">moxsh-plugins</div><div class="desc">插件目录与清单规范</div></a>
+    <a class="card" href="https://github.com/codecloud-dev/moxwebgpu">
+      <div class="name">moxwebgpu</div><div class="desc">浏览器端 WebGPU 计算库</div></a>
+    <a class="card" href="https://github.com/codecloud-dev/agent-core">
+      <div class="name">agent-core</div><div class="desc">元认知与护栏通用核心包</div></a>
+    <a class="card" href="https://github.com/codecloud-dev/moxsh-suite">
+      <div class="name">moxsh-suite</div><div class="desc">本总仓 · 规范 / 版本矩阵</div></a>
+  </div>
+
+  <h2>版本编排</h2>
+  <p style="font-size:14px;color:#414b57;max-width:680px">
+    子模块锁定提交由 <code>scripts/sync-submodule-pins.mjs</code> 从 <code>git ls-tree HEAD</code>
+    生成，中英双语 README 同步，并由 CI 在每次 push / PR 强校验；跨仓版本组合见仓库根目录的
+    <code>compat-matrix.json</code>（人工采集，非实时数据）。
+  </p>
+
+  <footer>MoX · 本页由 GitHub Actions 从 <code>pages/</code> 部署，不含任何私有子模块内容。</footer>
+</main>
+</body>
+</html>
