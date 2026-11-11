@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-11-11",
+  "source": "各仓构建文件的真实值（人工采集日期见 generatedAt）；CI 校验结构，并用已 checkout 的 app 子模块核对 moxsh-terminal 版本。",
+  "limitation": "这不是跨仓实时数据。其它仓发新版后需人工更新本文件；CI 不会假装能实时读取外部仓库，也不会因为外部仓库升级而误报本仓失败。",
+  "releaseLines": [
+    {
+      "line": "2026-11-11 全仓审计修复批次",
+      "note": "本批次修 Kotlin 崩溃点、终端备用屏、login -b 绑定透传、密码登录双维度限流、CI 重复告警与插件 Schema 对齐。",
+      "components": [
+        { "repo": "codecloud-dev/moxsh-terminal", "version": "1.0.1", "source": "moxsh/app/build.gradle.kts → versionName", "submodule": "app" },
+        { "repo": "codecloud-dev/moxsh-proot", "version": "0.9.0", "source": "Cargo.toml → version" },
+        { "repo": "codecloud-dev/moxwebgpu", "version": "1.1.0", "source": "package.json → version" },
+        { "repo": "codecloud-dev/agent-core", "version": "1.1.0", "source": "package.json → version" },
+        { "repo": "codecloud-dev/moxsh-plugins", "version": "1.0.1", "source": "catalog.json → repoVersion" },
+        { "repo": "codecloud-dev/mox-id", "version": "0.1.1", "source": "package.json → version" },
+        { "repo": "codecloud-dev/mox-site", "version": "unversioned", "source": "静态站，无版本号；以 Pages 部署 commit 为准" },
+        { "repo": "codecloud-dev/moxsh-suite", "version": "unversioned", "source": "聚合仓，无独立版本号；以 gitlink + 本矩阵为准" }
+      ]
+    }
+  ]
+}

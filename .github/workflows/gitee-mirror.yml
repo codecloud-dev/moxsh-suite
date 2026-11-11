@@ -1,7 +1,9 @@
 name: 镜像到 Gitee（单向，GitHub 为唯一主源）
 on:
   push:
-    branches: [master]
+    # 审计修复：本仓当前默认分支是 master，其余仓是 main。写死 master 会在
+    # 将来改名 main 后彻底不再触发；两个都列，改名无需再改 workflow。
+    branches: [master, main]
   schedule:
     - cron: '23 */6 * * *'   # 每 6 小时兜底，防 push 触发的同步失败漏同步
   workflow_dispatch:        # 允许手动触发补同步

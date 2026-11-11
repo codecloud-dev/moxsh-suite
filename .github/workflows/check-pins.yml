@@ -1,0 +1,27 @@
+name: 校验子模块锁定版本与兼容矩阵
+
+on:
+  push:
+    paths: ['README.md', 'compat-matrix.json', 'app', 'site', 'scripts/**']
+  pull_request:
+    paths: ['README.md', 'compat-matrix.json', 'app', 'site', 'scripts/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false   # 只需 gitlink（在 tree 里），不拉子模块内容
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: README pin 必须等于真实 gitlink
+        run: node scripts/check-submodule-pins.mjs
+      - name: 兼容矩阵结构与本地版本一致性
+        run: node scripts/check-compat-matrix.mjs

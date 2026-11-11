@@ -69,14 +69,47 @@ moxsh-suite  (本仓库 / monorepo，默认分支 master)
 
 ## 🔗 子模块锁定版本
 
-| 子模块 | 仓库 | 锁定提交（moxsh-terminal v1.0.0 · 里程碑 M7） |
-|---|---|---|
-| `app`  | `codecloud-dev/moxsh-terminal` | `709cd64`（[v1.0.0](https://mox-site.pages.dev/go?r=moxsh-terminal&p=releases/tag/v1.0.0)） |
-| `site` | `codecloud-dev/mox-site`        | `bcdc62b`（[v1.0.0](https://mox-site.pages.dev/go?r=mox-site&p=releases/tag/v1.0.0)） |
+<!-- SUBMODULE_PINS:BEGIN 由 scripts/sync-submodule-pins.mjs 自动生成，请勿手改 -->
+| 子模块 | 仓库 | 锁定提交（真实 gitlink） |
+| --- | --- | --- |
+| `app` | `codecloud-dev/moxsh-terminal` | `6daa15f`（[查看该提交](https://github.com/codecloud-dev/moxsh-terminal/tree/6daa15f7c2241922280f1c44cdd83c7bbed34cbf)） |
+| `site` | `codecloud-dev/mox-site` | `918b51f`（[查看该提交](https://github.com/codecloud-dev/mox-site/tree/918b51f302f2c608dab0225749181774813d6509)） |
 
-> 本仓库随 MoX 全家桶一同升到 **1.0.0** 大版本里程碑：两个子模块均已 bump 到各自的 v1.0.0 发布提交。其余公开仓库（agent-core / moxsh-plugins / moxwebgpu）也已同期发布 1.0.0；moxbox / moxcode 仍属「规划中 · 待定」，本次不做。本期进一步 **推进到 M7 里程碑**：`app` 子模块同步到 moxsh-terminal v1.0.0（terminal-core 1.0.0 对齐，提交 `709cd64`），路线图 M7（性能与生态深化）已开启。
+> 本区块由 `scripts/sync-submodule-pins.mjs` 从 `git ls-tree HEAD` 生成，CI 由 `check-pins.yml` 校验；
+> 手动改这里会在下次 PR 直接失败。bump 子模块后请重跑 `node scripts/sync-submodule-pins.mjs`。
+<!-- SUBMODULE_PINS:END -->
 
-说明：锁定提交是 monorepo 初始化时的快照。子仓库演进后，在 `moxsh-suite` 中 `cd` 进子模块 `git pull` 再回到根目录 `git add app site && git commit` 即可 bump 版本。
+> **2026-11-11 修正**：此前这里手写 `709cd64` / `bcdc62b` 两个 pin，与真实 gitlink
+> （`6daa15f` / `918b51f`）**对不上**——子模块 bump 后没人同步文档。现已改为从
+> `git ls-tree HEAD` 自动生成，并由 `check-pins.yml` 在每次 push / PR 强校验。
+
+子仓库各自独立演进，bump 子模块后必须同步 pin，否则 CI 会拦下：
+
+```bash
+cd app && git fetch origin main && git checkout <目标提交> && cd ..
+git add app && git commit -m "chore: bump app 子模块"
+node scripts/sync-submodule-pins.mjs
+git add README.md && git commit --amend --no-edit
+```
+
+各仓「哪些版本是同一期发布、一起测过」见 [兼容矩阵](compat-matrix.json)；
+本仓库不产二进制，自身不设独立版本号，版本基准就是上面的 gitlink + 该矩阵。
+
+### 国内网络：子模块走 Gitee 镜像
+
+`.gitmodules` 里的 URL 必须保留 GitHub 主源（Gitee 只是只读镜像，且两个子模块的
+Gitee 路径与 GitHub 不同）。国内 clone 本仓库后，不要改 `.gitmodules`，用本机
+`insteadOf` 重写即可让 `git submodule update --init` 改走 Gitee：
+
+```bash
+git config --global url."https://gitee.com/thousand-code-crafts/".insteadOf \
+  "https://github.com/codecloud-dev/"
+git submodule update --init --recursive
+# 用完可撤销：git config --global --unset-all url."https://gitee.com/thousand-code-crafts/".insteadOf
+```
+
+> 注：`site` 子模块对应的 Gitee 镜像可能不存在（该仓曾为私有），此时 `insteadOf`
+> 仍会回落到失败而不是自动回源；遇到就临时 `--unset-all` 再单独初始化。
 
 ## 📑 目录导航
 
