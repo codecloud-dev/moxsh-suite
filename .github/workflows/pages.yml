@@ -36,7 +36,7 @@ jobs:
           fetch-depth: 1
 
       - name: 配置 Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: 上传站点产物（仅公开索引页）
         uses: actions/upload-pages-artifact@v3
