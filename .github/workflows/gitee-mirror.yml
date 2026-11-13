@@ -1,16 +1,21 @@
 name: 镜像到 Gitee（单向，GitHub 为唯一主源）
 on:
-  push:
-    # 审计修复：本仓当前默认分支是 master，其余仓是 main。写死 master 会在
-    # 将来改名 main 后彻底不再触发；两个都列，改名无需再改 workflow。
-    branches: [master, main]
+  # 2026-11-13 审计：去掉 push 触发。
+  # GitHub-hosted runner 在美国，实测到 gitee.com 的 git 连接稳定被
+  # 「Recv failure: Connection reset by peer」阻断（run 43439774127 三次
+  # 重试全挂，耗时 4m44s）。同一时刻从国内网络测 gitee.com 是 200 且
+  # ls-remote 正常 —— 这是地域性网络阻断，不是代码或凭证问题。
+  # 每次 push 都挂一个必红的 run 只会制造无意义告警；GitHub 本来就是唯一
+  # 主源，镜像是单向冗余。改为定时同步 + 随时可手动补同步：
+  # 定时 job 失败时仍真实 exit 1 并打印错误，不改成假绿。
   schedule:
-    - cron: '23 */6 * * *'   # 每 6 小时兜底，防 push 触发的同步失败漏同步
-  workflow_dispatch:        # 允许手动触发补同步
+    - cron: '23 */2 * * *'   # 每 2 小时兜底同步（原 6 小时，缩短同步窗口）
+  workflow_dispatch:        # 允许手动触发补同步，或国内网络恢复后立即补推
 
 jobs:
   mirror:
     runs-on: ubuntu-latest
+    timeout-minutes: 15     # 地域阻断时不要空耗 runner
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,8 +36,9 @@ jobs:
           git remote add gitee "https://gitee.com/${GITEE_REPO}.git"
           git config --local "http.https://gitee.com/.extraheader" \
             "Authorization: Basic $(printf 'thousand-code-crafts:%s' "$GITEE_TOKEN" | base64 -w0)"
-          # Gitee 偶发连接超时（>300s），自动重试 3 次兜底
-          for attempt in 1 2 3; do
+          # 连接被 reset 属地域阻断，同一路径重试意义有限：
+          # 保留 2 次短重试，下一次定时同步（每 2 小时）会继续兜底。
+          for attempt in 1 2; do
             echo "::group::镜像尝试第 $attempt 次"
             if git push --prune gitee "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*"; then
               echo "::endgroup::"
@@ -40,10 +46,10 @@ jobs:
               exit 0
             fi
             echo "::endgroup::"
-            if [ "$attempt" -eq 3 ]; then
-              echo "::error::镜像 3 次尝试均失败"
+            if [ "$attempt" -eq 2 ]; then
+              echo "::error::Gitee 镜像同步失败（2 次尝试均失败）。GitHub 为唯一主源，本次同步未生效；下一次定时同步或手动触发会重试。持续失败通常是 runner 到 gitee.com 的地域性连接阻断，不是代码或凭证问题。"
               exit 1
             fi
-            echo "::warning::第 $attempt 次镜像失败，$((attempt * 30))s 后重试"
-            sleep $((attempt * 30))
+            echo "::warning::第 $attempt 次镜像失败，15s 后重试"
+            sleep 15
           done
