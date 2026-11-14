@@ -1,4 +1,4 @@
-> **🌐 主仓库在 GitHub** — [`codecloud-dev/moxsh-suite`](https://mox-site.pages.dev/go?r=moxsh-suite) 是唯一主源：Issue、Pull Request、功能讨论请统一提交到 GitHub。[Gitee 镜像](https://gitee.com/thousand-code-crafts/moxsh-suite) 仅供国内高速只读访问，每小时从 GitHub 自动同步。
+> **🌐 主仓库在 GitHub** — [`codecloud-dev/moxsh-suite`](https://mox-site.pages.dev/go?r=moxsh-suite) 是唯一主源：Issue、Pull Request、功能讨论请统一提交到 GitHub。[Gitee 镜像](https://gitee.com/thousand-code-crafts/moxsh-suite) 仅供国内高速只读访问，每 2 小时从 GitHub 定时同步（亦支持手动触发），不再随 push 触发。
 
 <p align="center"><img src="assets/logo.svg" width="128" alt="MoX"/></p>
 

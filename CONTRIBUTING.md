@@ -35,7 +35,10 @@
 | 改动范围 | 命令 / 说明 |
 | --- | --- |
 | 子模块 | `git submodule update --init --recursive` |
+| 子模块 pin 一致性 | `node scripts/check-submodule-pins.mjs`（校验中英 README pin 区块与真实 gitlink 一致，CI 由 `check-pins.yml` 强校验） |
+| 兼容矩阵结构 | `node scripts/check-compat-matrix.mjs` |
 | 规格 JSON | 逐个 `python3 -m json.tool spec/*.json >/dev/null` |
+| 插件清单示例 | `npx ajv-cli@5 validate --spec=draft2020 --strict=false -s spec/plugin-manifest.schema.json -d 'spec/examples/*.json'`（详见 [spec/README.md](spec/README.md)） |
 
 命令以仓库当前内容为准；如果和你本地不一致，以 [CI 工作流](.github/workflows/) 里实际跑的为准，并欢迎顺手修这份文档。
 
