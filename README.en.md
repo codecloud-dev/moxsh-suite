@@ -6,10 +6,20 @@
 # moxsh · monorepo
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0-8a7bff" alt="version">
-  <img src="https://img.shields.io/badge/license-MIT-37d5d3" alt="license">
-  <img src="https://img.shields.io/badge/repo-monorepo-2088FF" alt="monorepo">
-  <img src="https://img.shields.io/badge/submodules-git%20linked-ff7ac3" alt="submodules">
+  <a href="https://github.com/codecloud-dev/moxsh-suite"><img src="https://img.shields.io/badge/MoX_Series-%E8%B5%84%E4%BA%A7%E6%80%BB%E5%85%A5%E5%8F%A3-8a7bff?style=for-the-badge&logo=github&logoColor=white" alt="MoX Series: 资产总入口"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/monorepo-%E5%AD%90%E6%A8%A1%E5%9D%97-14181A?style=for-the-badge&logo=git&logoColor=F05032" alt="monorepo: 子模块"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/docs-%E8%AE%BE%E8%AE%A1_%2F_%E8%A7%84%E8%8C%83-14181A?style=for-the-badge&logo=gitbook&logoColor=2088FF" alt="docs: 设计 / 规范"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/version-1.0.0-14181A?style=for-the-badge&logo=github&logoColor=37d5d3" alt="version: 1.0.0"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/docs-%E4%B8%AD_%2F_EN-14181A?style=for-the-badge&logo=gitbook&logoColor=ff7ac3" alt="docs: 中 / EN"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/codecloud-dev/moxsh-suite/actions/workflows/check-pins.yml"><img src="https://img.shields.io/github/actions/workflow/status/codecloud-dev/moxsh-suite/check-pins.yml?branch=master&style=flat-square&label=CI" alt="CI"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/LICENSE"><img src="https://img.shields.io/github/license/codecloud-dev/moxsh-suite?style=flat-square&color=37d5d3" alt="License"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite/stargazers"><img src="https://img.shields.io/github/stars/codecloud-dev/moxsh-suite?style=flat-square&color=ff7ac3" alt="Stars"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite/commits/master"><img src="https://img.shields.io/github/last-commit/codecloud-dev/moxsh-suite?style=flat-square&color=8a7bff" alt="Last commit"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite"><img src="https://img.shields.io/badge/submodules-app_%2F_site-ff7ac3?style=flat-square" alt="submodules: app / site"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite/pulls"><img src="https://img.shields.io/badge/PRs-welcome-8a7bff?style=flat-square&logo=github&logoColor=white" alt="PRs welcome"></a>
 </p>
 
 <p align="center"><a href="README.md">中文</a> · <b>English</b></p>
