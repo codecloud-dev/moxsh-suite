@@ -1,4 +1,4 @@
-> **🌐 主仓库在 GitHub** — [`codecloud-dev/moxsh-suite`](https://mox-site.pages.dev/go?r=moxsh-suite) 是唯一主源：Issue、Pull Request、功能讨论请统一提交到 GitHub。[Gitee 镜像](https://gitee.com/thousand-code-crafts/moxsh-suite) 仅供国内高速只读访问，每 2 小时从 GitHub 定时同步（亦支持手动触发），不再随 push 触发。
+> **🌐 主仓库在 GitHub** — [`codecloud-dev/moxsh-suite`](https://mox-site.pages.dev/go?r=moxsh-suite) 是唯一主源：Issue、Pull Request、功能讨论请统一提交到 GitHub。[Gitee 镜像](https://gitee.com/codecloud-dev/moxsh-suite) 仅供国内高速只读访问，每 2 小时从 GitHub 定时同步（亦支持手动触发），不再随 push 触发。
 
 <p align="center"><img src="assets/logo.svg" width="128" alt="MoX"/></p>
 
@@ -117,10 +117,10 @@ Gitee 路径与 GitHub 不同）。国内 clone 本仓库后，不要改 `.gitmo
 `insteadOf` 重写即可让 `git submodule update --init` 改走 Gitee：
 
 ```bash
-git config --global url."https://gitee.com/thousand-code-crafts/".insteadOf \
+git config --global url."https://gitee.com/codecloud-dev/".insteadOf \
   "https://github.com/codecloud-dev/"
 git submodule update --init --recursive
-# 用完可撤销：git config --global --unset-all url."https://gitee.com/thousand-code-crafts/".insteadOf
+# 用完可撤销：git config --global --unset-all url."https://gitee.com/codecloud-dev/".insteadOf
 ```
 
 > 注：`site` 子模块对应的 Gitee 镜像可能不存在（该仓曾为私有），此时 `insteadOf`
