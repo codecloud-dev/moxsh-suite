@@ -9,7 +9,7 @@
   <a href="https://github.com/codecloud-dev/moxsh-suite"><img src="https://img.shields.io/badge/MoX_Series-%E8%B5%84%E4%BA%A7%E6%80%BB%E5%85%A5%E5%8F%A3-8a7bff?style=for-the-badge&logo=github&logoColor=white" alt="MoX Series: 资产总入口"></a>
   <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/monorepo-%E5%AD%90%E6%A8%A1%E5%9D%97-14181A?style=for-the-badge&logo=git&logoColor=F05032" alt="monorepo: 子模块"></a>
   <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/docs-%E8%AE%BE%E8%AE%A1_%2F_%E8%A7%84%E8%8C%83-14181A?style=for-the-badge&logo=gitbook&logoColor=2088FF" alt="docs: 设计 / 规范"></a>
-  <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/version-1.0.0-14181A?style=for-the-badge&logo=github&logoColor=37d5d3" alt="version: 1.0.0"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.0.1-14181A?style=for-the-badge&logo=github&logoColor=37d5d3" alt="version: 1.0.1"></a>
   <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/docs-%E4%B8%AD_%2F_EN-14181A?style=for-the-badge&logo=gitbook&logoColor=ff7ac3" alt="docs: 中 / EN"></a>
 </p>
 
@@ -102,6 +102,12 @@ Both use `main` as their default branch (this monorepo itself uses `master`).
 
 After bumping a submodule, re-run `node scripts/sync-submodule-pins.mjs` (updates both READMEs).
 
+If the new commit changes `versionName`, **also update `moxsh-terminal`'s version in
+`compat-matrix.json`**: `check-compat-matrix.mjs` compares it with the real
+`app/moxsh/app/build.gradle.kts` at the pinned commit and fails the PR on mismatch.
+CI first checks out the public `app` submodule with `git submodule update --init --depth 1 app`;
+the private `site` submodule is never checked out.
+
 ## 📑 Directory navigation
 
 | Path | Content |
@@ -111,7 +117,7 @@ After bumping a submodule, re-run `node scripts/sync-submodule-pins.mjs` (update
 | `app/moxsh/plugins/plugin-ai/` | AI assistant (multi-model + skills + Agent tools) |
 | `site/` | Static website + online experience page (`experience.html` embeds `prototype.html`) |
 | `design/moxsh-ui-mockup.html` | Main interaction prototype (also the source of `site/prototype.html`) |
-| `design/tests/test_ui.js` | Playwright prototype regression tests (terminal / quartet / session drawer / 0 errors) |
+| `design/tests/test_ui.js` | Playwright prototype regression (33 assertions / 0 errors, runs in CI) |
 | `docs/` | Podroid UI study notes, acceptance reports |
 | `spec/plugin-manifest.schema.json` | Plugin manifest Draft 2020-12 JSON Schema (41 top-level fields) |
 | `spec/examples/` | Five real examples: OSS-free / closed-free / closed-paid (donation) / subscription / system-builtin |
@@ -144,7 +150,7 @@ Local preview: open `site/index.html`, or `design/moxsh-ui-mockup.html`, directl
 ### 🎨 design/ — UI prototype
 
 - `moxsh-ui-mockup.html` —— **main prototype**: full-app liquid glass; bottom three keys (terminal / categories / settings); **session drawer** (Termux-style: env-color dots / long-press rename / exit-code red strikethrough / new); **beginner-friendly graphical container-management quartet** (distro manager / graphical package manager / resource monitor / onboarding); control center (volume + key summon, follows finger); AI assistant config screen.
-- `tests/test_ui.js` —— Playwright regression covering 10 terminal lines, 4 quartet cards, usable session drawer, 2 homepage entries, 0 console errors.
+- `tests/test_ui.js` —— Playwright regression, **33 assertions**: five theme switches, three view tabs, terminal commands, session drawer & swipe gestures, AI panel, control center / shortcuts, glass-opacity slider, scroll-to-collapse header; 0 console errors. Run automatically in CI via `.github/workflows/design-ui-test.yml` with pinned `playwright@1.58.1`.
 
 ### 🧩 spec/ — plugin manifest spec
 
@@ -163,6 +169,21 @@ Local preview: open `site/index.html`, or `design/moxsh-ui-mockup.html`, directl
 - **App build / release**: see the `app` sub-repo `README.md` (needs Android SDK / NDK / Rust toolchain).
 - **Website changes**: see the `site` sub-repo; GitHub Pages auto-builds after pushing `main`.
 - **This repo's job**: only to gather assets and specs. After a submodule evolves, advance it in its own repo, then bump the gitlink here and commit.
+
+### Local verification (same commands as CI)
+
+```bash
+node scripts/check-submodule-pins.mjs           # README pins == real gitlinks
+node scripts/check-compat-matrix.mjs            # structure + real version at pinned commit
+python3 .github/scripts/check_secrets.py --self-test   # rules / placeholders / scan dirs
+python3 .github/scripts/check_secrets.py         # whole-repo secret scan (incl. .github/)
+node design/tests/test_ui.js                    # needs playwright@1.58.1 + chromium
+```
+
+The first four run via `check-pins.yml` / `secret-scan.yml`; UI assertions run via
+`design-ui-test.yml`; `pages.yml` only publishes `pages/` and never touches private submodules.
+There is no top-level `package.json`: playwright is installed temporarily by the UI workflow
+and never enters the dependency tree.
 
 ## 📜 License
 

@@ -9,11 +9,12 @@
 import os
 import re
 import sys
+import tempfile
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 EXCLUDE_DIRS = {
-    '.git', '.github', 'node_modules', 'target', 'build', 'dist', 'vendor',
+    '.git', 'node_modules', 'target', 'build', 'dist', 'vendor',
     '__pycache__', '.gradle', '.idea', '.venv', 'venv', 'coverage', '.next',
     '.wrangler', '.cxx', '.externalNativeBuild', 'pods', 'DerivedData',
 }
@@ -90,6 +91,22 @@ def looks_like_placeholder(line):
     low = line.lower()
     return any(m in low for m in PLACEHOLDER_MARKERS)
 
+def iter_files(root):
+    """产出 (相对路径, 绝对路径)。扫描 .github/ 下的 workflow / 脚本，但跳过 .git/ 自身。"""
+    for cur, dirs, files in os.walk(root):
+        # 只排除真正的 .git 目录：不能用 startswith('.git')，那会把 .github 一起吞掉。
+        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS and d != '.git']
+        for name in files:
+            full = os.path.join(cur, name)
+            rel = os.path.relpath(full, root).replace(os.sep, '/')
+            # 扫描脚本自身含全部规则的样例字符串，必须跳过（否则必然误报）
+            if rel.endswith('check_secrets.py'):
+                continue
+            if os.path.splitext(name)[1].lower() in SKIP_EXT:
+                continue
+            yield rel, full
+
+
 def scan_line(line):
     if "${" in line or "replace_with" in line.lower():
         return None
@@ -117,32 +134,44 @@ def self_test():
         hit = scan_line(safe)
         if hit:
             print("FAIL: 占位符被误报 %r -> %s" % (safe, hit[0])); return 1
-    print("OK: %d 条规则全部命中样例，%d 条占位符无误报，过滤未误吃真密钥"
+    # 目录守门回归：.github/ 必须纳入扫描，.git/ 必须排除。
+    # 曾经的 bug：EXCLUDE_DIRS 含 '.github' 且 `not d.startswith('.git')`
+    # 双重排除，导致 workflow 里哪怕写死真令牌也永远扫不到（假绿）。
+    with tempfile.TemporaryDirectory() as td:
+        leak_dir = os.path.join(td, '.github', 'workflows')
+        git_dir = os.path.join(td, '.git')
+        os.makedirs(leak_dir)
+        os.makedirs(git_dir)
+        leak = os.path.join(leak_dir, 'leak.yml')
+        internal = os.path.join(git_dir, 'config')
+        for p in (leak, internal):
+            with open(p, 'w', encoding='utf-8') as f:
+                f.write(SELF_TEST_SAMPLES['github_token'] + '\n')
+        rels = [rel for rel, _ in iter_files(td)]
+        if '.github/workflows/leak.yml' not in rels:
+            print("FAIL: .github/ 被排除，workflow 中的密钥扫不到（扫描盲区）"); return 1
+        if any(r.startswith('.git/') for r in rels):
+            print("FAIL: .git/ 未被排除，会把历史对象当源码扫描"); return 1
+        with open(leak, 'r', encoding='utf-8') as f:
+            if not any(scan_line(line) for line in f):
+                print("FAIL: .github/workflows 里的样例令牌未被规则命中"); return 1
+    print("OK: %d 条规则全部命中样例，%d 条占位符无误报，过滤未误吃真密钥，.github/ 无盲区"
           % (len(RULES), len(SELF_TEST_SAFE)))
     return 0
 
 def main():
     hits = []
-    for root, dirs, files in os.walk(REPO_ROOT):
-        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS and not d.startswith('.git')]
-        for name in files:
-            full = os.path.join(root, name)
-            rel = os.path.relpath(full, REPO_ROOT).replace(os.sep, '/')
-            # 扫描脚本自身含模式字符串，必须跳过
-            if rel.endswith('check_secrets.py'):
+    for rel, full in iter_files(REPO_ROOT):
+        try:
+            if os.path.getsize(full) > MAX_BYTES:
                 continue
-            if os.path.splitext(name)[1].lower() in SKIP_EXT:
-                continue
-            try:
-                if os.path.getsize(full) > MAX_BYTES:
-                    continue
-                with open(full, 'r', encoding='utf-8', errors='ignore') as f:
-                    for ln, line in enumerate(f, 1):
-                        hit = scan_line(line)
-                        if hit:
-                            hits.append((rel, ln, hit[0], hit[1].group(0)[:24]))
-            except OSError:
-                continue
+            with open(full, 'r', encoding='utf-8', errors='ignore') as f:
+                for ln, line in enumerate(f, 1):
+                    hit = scan_line(line)
+                    if hit:
+                        hits.append((rel, ln, hit[0], hit[1].group(0)[:24]))
+        except OSError:
+            continue
     if not hits:
         print("OK: 未发现疑似密钥 / 令牌")
         return 0

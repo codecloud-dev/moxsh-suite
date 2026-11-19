@@ -16,11 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: false   # 只需 gitlink（在 tree 里），不拉子模块内容
+          submodules: false   # 不拉 site（private）；app 下一步单独检出
           fetch-depth: 1
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: 检出 public 的 app 子模块
+        # app 是 public，安全可拉；site 是 private，保持不检出。
+        # 这样 check-compat-matrix.mjs 才能真读 build.gradle.kts 核对
+        # 矩阵声明的 moxsh-terminal 版本（此前 CI 永远跳过这一步 = 假绿）。
+        run: git submodule update --init --depth 1 app
       - name: README pin 必须等于真实 gitlink
         run: node scripts/check-submodule-pins.mjs
       - name: 兼容矩阵结构与本地版本一致性

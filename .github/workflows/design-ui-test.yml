@@ -1,0 +1,40 @@
+name: UI 原型回归测试（Playwright）
+
+# design/tests/test_ui.js 此前硬编码 file:///workspace/moxsh-ui-5styles.html，
+# 在任何新 clone / CI runner 上都必然 ERR_FILE_NOT_FOUND；再加上仓库没有
+# package.json、CI 从未安装 playwright，这个测试等于从未真正执行过。
+# 本 workflow 把 33 条断言接入 CI：只跑公开 design/ 下的原型，不涉及私有子模块。
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'design/**'
+      - '.github/workflows/design-ui-test.yml'
+  pull_request:
+    paths:
+      - 'design/**'
+      - '.github/workflows/design-ui-test.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ui-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # 钉死版本：不写 package.json / package-lock，避免把本仓变成前端项目。
+      - name: 安装固定版本 playwright
+        run: npm install --no-save --no-package-lock playwright@1.58.1
+      - name: 安装 chromium 及系统依赖
+        run: npx playwright@1.58.1 install --with-deps chromium
+      - name: 跑 33 条 UI 断言
+        run: node design/tests/test_ui.js

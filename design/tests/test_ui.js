@@ -1,4 +1,11 @@
 const { chromium } = require('playwright');
+const path = require('path');
+const { pathToFileURL } = require('url');
+
+// 用脚本自身位置解析被测页面，不能用绝对路径：此前硬编码
+// file:///workspace/moxsh-ui-5styles.html，在任何新 clone / CI runner 上都
+// 必然 ERR_FILE_NOT_FOUND，测试等于从未真正跑过。
+const PAGE_URL = pathToFileURL(path.resolve(__dirname, '..', 'moxsh-ui-5styles.html')).href;
 
 (async () => {
   const browser = await chromium.launch();
@@ -7,7 +14,7 @@ const { chromium } = require('playwright');
   page.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push('CONSOLE: ' + m.text()); });
 
-  await page.goto('file:///workspace/moxsh-ui-5styles.html');
+  await page.goto(PAGE_URL);
   await page.waitForTimeout(400);
 
   const results = [];

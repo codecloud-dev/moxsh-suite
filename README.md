@@ -9,7 +9,7 @@
   <a href="https://github.com/codecloud-dev/moxsh-suite"><img src="https://img.shields.io/badge/MoX_Series-%E8%B5%84%E4%BA%A7%E6%80%BB%E5%85%A5%E5%8F%A3-8a7bff?style=for-the-badge&logo=github&logoColor=white" alt="MoX Series: 资产总入口"></a>
   <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/monorepo-%E5%AD%90%E6%A8%A1%E5%9D%97-14181A?style=for-the-badge&logo=git&logoColor=F05032" alt="monorepo: 子模块"></a>
   <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/docs-%E8%AE%BE%E8%AE%A1_%2F_%E8%A7%84%E8%8C%83-14181A?style=for-the-badge&logo=gitbook&logoColor=2088FF" alt="docs: 设计 / 规范"></a>
-  <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/version-1.0.0-14181A?style=for-the-badge&logo=github&logoColor=37d5d3" alt="version: 1.0.0"></a>
+  <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.0.1-14181A?style=for-the-badge&logo=github&logoColor=37d5d3" alt="version: 1.0.1"></a>
   <a href="https://github.com/codecloud-dev/moxsh-suite/blob/master/README.md"><img src="https://img.shields.io/badge/docs-%E4%B8%AD_%2F_EN-14181A?style=for-the-badge&logo=gitbook&logoColor=ff7ac3" alt="docs: 中 / EN"></a>
 </p>
 
@@ -104,8 +104,14 @@ moxsh-suite  (本仓库 / monorepo，默认分支 master)
 cd app && git fetch origin main && git checkout <目标提交> && cd ..
 git add app && git commit -m "chore: bump app 子模块"
 node scripts/sync-submodule-pins.mjs
-git add README.md && git commit --amend --no-edit
+git add README.md README.en.md && git commit --amend --no-edit
 ```
+
+> 若新提交改了 `versionName`，**必须同步更新 `compat-matrix.json` 里
+> `moxsh-terminal` 的版本**：`check-compat-matrix.mjs` 会拿 pin 处的
+> `app/moxsh/app/build.gradle.kts` 真值比对，不一致直接拦下 PR。
+> CI 会先以 `git submodule update --init --depth 1 app` 检出 public 的 app 子模块
+> 再做这项核对；private 的 `site` 始终不检出。
 
 各仓「哪些版本是同一期发布、一起测过」见 [兼容矩阵](compat-matrix.json)；
 本仓库不产二进制，自身不设独立版本号，版本基准就是上面的 gitlink + 该矩阵。
@@ -135,7 +141,7 @@ git submodule update --init --recursive
 | `app/moxsh/plugins/plugin-ai/` | AI 助手（多模型接入 + 技能 + Agent 工具） |
 | `site/` | 官网静态站 + 在线体验页（`experience.html` 嵌入 `prototype.html`） |
 | `design/moxsh-ui-mockup.html` | 主交互原型（也是 `site/prototype.html` 的来源） |
-| `design/tests/test_ui.js` | Playwright 原型回归测试（终端 / 四件套 / 会话抽屉 / 0 报错） |
+| `design/tests/test_ui.js` | Playwright 原型回归测试（33 条断言 / 0 报错，CI 自动跑） |
 | `docs/` | Podroid UI 学习笔记、验收报告 |
 | `spec/plugin-manifest.schema.json` | 插件清单 Draft 2020-12 JSON Schema（41 顶层字段） |
 | `spec/examples/` | 开源免费 / 闭源免费 / 闭源付费(爱发电) / 订阅制 / 系统内置 五套真实示例 |
@@ -168,7 +174,7 @@ git config --global url."https://ghproxy.net/https://github.com/".insteadOf "htt
 ### 🎨 design/ — UI 原型
 
 - `moxsh-ui-mockup.html` —— **主原型**：全应用液态玻璃；底部三键（终端 / 分类 / 设置）；**会话抽屉**（Termux 式：环境色点 / 长按改名 / 退出码红删除线 / 新建）；**针对小白的图形化容器管理四件套**（发行版管理器 / 图形包管理器 / 资源监控 / 新手引导）；控制中心（音量+键呼出、跟手）；AI 助手配置屏。
-- `tests/test_ui.js` —— Playwright 回归，覆盖终端 10 行、四件套 4 卡、会话抽屉可用、首页 2 入口、0 控制台报错。
+- `tests/test_ui.js` —— Playwright 回归，**33 条断言**：五主题切换、三键视图、终端命令、会话抽屉与左右滑手势、AI 面板、控制中心 / 快捷键、通透度滑块、滚动收标题，且 0 控制台报错。由 `.github/workflows/design-ui-test.yml` 固定 `playwright@1.58.1` 在 CI 自动执行。
 
 ### 🧩 spec/ — 插件清单规范
 
@@ -187,6 +193,20 @@ git config --global url."https://ghproxy.net/https://github.com/".insteadOf "htt
 - **App 编译 / 发布**：见 `app` 子仓库 `README.md`（需要 Android SDK / NDK / Rust 工具链）。
 - **官网改动**：见 `site` 子仓库，推 `main` 后 GitHub Pages 自动构建。
 - **本仓库职责**：仅收纳资产与规范。子模块版本演进后，在子仓库推进、于本仓库 bump gitlink 再提交即可。
+
+### 本地校验（与 CI 同命令）
+
+```bash
+node scripts/check-submodule-pins.mjs           # README pin == 真实 gitlink
+node scripts/check-compat-matrix.mjs            # 结构 + pin 处真实版本核对（app 需在 pin）
+python3 .github/scripts/check_secrets.py --self-test   # 规则/占位符/扫描目录自测
+python3 .github/scripts/check_secrets.py         # 全仓密钥扫描（含 .github/）
+node design/tests/test_ui.js                    # 需 playwright@1.58.1 + chromium
+```
+
+前三条走 `check-pins.yml` / `secret-scan.yml`，UI 断言走 `design-ui-test.yml`；
+`pages.yml` 只发布 `pages/`，不碰私有子模块。本仓无顶层 `package.json`，playwright
+由 UI workflow 临时安装，不进依赖树。
 
 ## 📜 许可证
 
