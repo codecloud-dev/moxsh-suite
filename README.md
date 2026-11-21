@@ -86,7 +86,7 @@ moxsh-suite  (本仓库 / monorepo，默认分支 master)
 <!-- SUBMODULE_PINS:BEGIN 由 scripts/sync-submodule-pins.mjs 自动生成，请勿手改 -->
 | 子模块 | 仓库 | 锁定提交（真实 gitlink） |
 | --- | --- | --- |
-| `app` | `codecloud-dev/moxsh-terminal` | `397081d`（[查看该提交](https://github.com/codecloud-dev/moxsh-terminal/tree/397081d01991999bd24d5d10403040d4f0338cdc)） |
+| `app` | `codecloud-dev/moxsh-terminal` | `0bf3585`（[查看该提交](https://github.com/codecloud-dev/moxsh-terminal/tree/0bf35851214038f02593ef82d333d38c0db9b068)） |
 | `site` | `codecloud-dev/mox-site` | `918b51f`（[查看该提交](https://github.com/codecloud-dev/mox-site/tree/918b51f302f2c608dab0225749181774813d6509)） |
 
 > 本区块由 `scripts/sync-submodule-pins.mjs` 从 `git ls-tree HEAD` 生成，CI 由 `check-pins.yml` 校验；
