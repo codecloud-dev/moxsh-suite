@@ -77,9 +77,8 @@ moxsh-suite  (本仓库 / monorepo，默认分支 master)
 
 `app`（`codecloud-dev/moxsh-terminal`）是 **public**，`site`（`codecloud-dev/mox-site`）是 **private**，两者默认分支均为 `main`（本总仓自身用 `master`）。
 
-> **2026-11-11 修正**：此前这里写「两个子仓库均为 public」，是错的。这正是 suite 的 legacy
-> GitHub Pages 构建执行 `git submodule update --init --recursive` 时对 `site` 报
-> `Repository not found` 的原因。私有子模块只是维护者本地指针，匿名 CI / Pages 拉不到。
+> `site` 为私有子模块，匿名访客 / CI 无法拉取；它只是维护者本地指针。
+> 下方快速开始给出的命令只初始化公开的 `app`，不会因 `site` 报错。
 
 ## 🔗 子模块锁定版本
 
@@ -125,7 +124,7 @@ Gitee 路径与 GitHub 不同）。国内 clone 本仓库后，不要改 `.gitmo
 ```bash
 git config --global url."https://gitee.com/codecloud-dev/".insteadOf \
   "https://github.com/codecloud-dev/"
-git submodule update --init --recursive
+git submodule update --init app
 # 用完可撤销：git config --global --unset-all url."https://gitee.com/codecloud-dev/".insteadOf
 ```
 
@@ -151,8 +150,12 @@ git submodule update --init --recursive
 ```bash
 git clone https://github.com/codecloud-dev/moxsh-suite.git
 cd moxsh-suite
-git submodule update --init --recursive   # 拉取 app / site
+git submodule update --init app          # 只拉取公开的 app 子模块
 ```
+
+> `site` 为私有子模块，普通用户无需拉取；有权限的维护者可执行
+> `git submodule update --init site`。直接用 `--recursive` 会因 `site` 私有而报
+> `Repository not found`。
 
 **代理拉取（中国大陆 / 受限网络）**：在 `clone` 之前设置 insteadOf，让 git 自动走 `ghproxy` 镜像：
 

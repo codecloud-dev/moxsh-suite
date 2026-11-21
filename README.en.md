@@ -77,10 +77,9 @@ moxsh-suite  (this repo / monorepo, default branch master)
 `app` (`codecloud-dev/moxsh-terminal`) is **public**; `site` (`codecloud-dev/mox-site`) is **private**.
 Both use `main` as their default branch (this monorepo itself uses `master`).
 
-> **2026-11-11 correction**: an earlier version of this file claimed both sub-repos were public.
-> That is wrong, and it is exactly why the legacy GitHub Pages build — which runs
-> `git submodule update --init --recursive` — fails with `Repository not found` for `site`.
-> The `site` submodule is a maintainer-local pointer; anonymous CI / Pages cannot fetch it.
+> `site` is a private submodule and cannot be fetched by anonymous visitors or CI;
+> it is a maintainer-local pointer. The quick start below initializes only the public
+> `app` submodule, so it will not fail on `site`.
 
 ## 🔗 Pinned submodule versions
 
@@ -127,8 +126,12 @@ the private `site` submodule is never checked out.
 ```bash
 git clone https://github.com/codecloud-dev/moxsh-suite.git
 cd moxsh-suite
-git submodule update --init --recursive   # pull app / site
+git submodule update --init app          # pull the public app submodule only
 ```
+
+> `site` is a private submodule and is not needed by most users; maintainers with access
+> can run `git submodule update --init site`. Using `--recursive` directly fails on `site`
+> with `Repository not found`.
 
 **Proxy clone (mainland China / restricted networks)**: set `insteadOf` before `clone` so git auto-routes through the `ghproxy` mirror:
 
