@@ -86,7 +86,7 @@
         "name": { "type": "string", "minLength": 1, "maxLength": 64 },
         "email": { "type": "string", "format": "email" },
         "url": { "type": "string", "format": "uri" },
-        "moxId": { "type": "string", "description": "mox-id 账号标识（mox 家族通行证）。" },
+        "moxId": { "type": "string", "description": "账号服务标识。" },
         "avatar": { "type": "string" }
       }
     },

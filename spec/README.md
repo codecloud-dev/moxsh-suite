@@ -118,7 +118,7 @@
 |---|---|---|
 | `activation-code` | 买断 | 用户输入解锁码，客户端 + 服务端校验 |
 | `order-query` | 爱发电买断 | 用爱发电订单号查询订单状态解锁（`orderQueryTemplate`） |
-| `account-bind` | 订阅/账号 | 绑定 mox-id 账号，服务端下发授权 |
+| `account-bind` | 订阅/账号 | 绑定账号服务，服务端下发授权 |
 | `offline-blob` | 离线授权 | 预置签名授权文件 |
 | `none` | 免费 | 无需校验 |
 
